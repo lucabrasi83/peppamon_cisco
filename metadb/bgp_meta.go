@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/lucabrasi83/peppamon_cisco/logging"
 )
 
@@ -54,37 +55,44 @@ func (p *peppamonMetaDB) PersistsBgpAfiMetadata(bgpAfiMeta []map[string]interfac
 	defer cancelQuery()
 
 	// Prepare SQL Statement in DB for Batch
-	_, err := p.db.PrepareEx(ctxTimeout, "bgp_afi_meta_query", sqlQuery, nil)
+	//_, err := p.db.PrepareEx(ctxTimeout, "bgp_afi_meta_query", sqlQuery, nil)
+	//
+	//if err != nil {
+	//	return err
+	//}
 
-	if err != nil {
-		return err
-	}
-
-	b := p.db.BeginBatch()
+	// b := p.db.BeginBatch()
+	b := &pgx.Batch{}
 
 	for _, cp := range bgpAfiMeta {
 
-		b.Queue("bgp_afi_meta_query",
-			[]interface{}{
-				cp["node_id"],
-				cp["timestamps"],
-				cp["bgp_address_family_type"],
-				cp["bgp_address_family_vrf"],
-				cp["bgp_afi_total_prefixes"],
-				cp["bgp_afi_total_paths"],
-			},
-			nil, nil)
+		b.Queue(sqlQuery,
+
+			cp["node_id"],
+			cp["timestamps"],
+			cp["bgp_address_family_type"],
+			cp["bgp_address_family_vrf"],
+			cp["bgp_afi_total_prefixes"],
+			cp["bgp_afi_total_paths"],
+		)
 	}
 
 	// Send Batch SQL Query
-	errSendBatch := b.Send(ctxTimeout, nil)
+	r := p.db.SendBatch(ctxTimeout, b)
+	c, errSendBatch := r.Exec()
+
+	// errSendBatch := b.Send(ctxTimeout, nil)
 
 	if errSendBatch != nil {
 		return errSendBatch
 	}
 
+	if c.RowsAffected() < 1 {
+		return fmt.Errorf("no insertion of row while executing query %v", sqlQuery)
+	}
+
 	// Execute Batch SQL Query
-	errExecBatch := b.Close()
+	errExecBatch := r.Close()
 	if errExecBatch != nil {
 
 		return errExecBatch
@@ -122,39 +130,46 @@ func (p *peppamonMetaDB) PersistsBgpPeersMetadata(bgpPeers []map[string]interfac
 	defer cancelQuery()
 
 	// Prepare SQL Statement in DB for Batch
-	_, err := p.db.PrepareEx(ctxTimeout, "bgp_neighbor_proc_meta_query", sqlQuery, nil)
+	//_, err := p.db.PrepareEx(ctxTimeout, "bgp_neighbor_proc_meta_query", sqlQuery, nil)
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//b := p.db.BeginBatch()
 
-	if err != nil {
-		return err
-	}
-
-	b := p.db.BeginBatch()
+	b := &pgx.Batch{}
 
 	for _, cp := range bgpPeers {
 
-		b.Queue("bgp_neighbor_proc_meta_query",
-			[]interface{}{
-				cp["node_id"],
-				cp["neighbor_id"],
-				cp["address_family_type"],
-				cp["timestamps"],
-				cp["address_family_vrf"],
-				cp["neighbor_status"],
-				cp["neighbor_uptime"],
-				cp["neighbor_remote_as"],
-			},
-			nil, nil)
+		b.Queue(sqlQuery,
+
+			cp["node_id"],
+			cp["neighbor_id"],
+			cp["address_family_type"],
+			cp["timestamps"],
+			cp["address_family_vrf"],
+			cp["neighbor_status"],
+			cp["neighbor_uptime"],
+			cp["neighbor_remote_as"],
+		)
 	}
 
 	// Send Batch SQL Query
-	errSendBatch := b.Send(ctxTimeout, nil)
+	//errSendBatch := b.Send(ctxTimeout, nil)
+	r := p.db.SendBatch(ctxTimeout, b)
+	c, errSendBatch := r.Exec()
 
 	if errSendBatch != nil {
 		return errSendBatch
 	}
 
+	if c.RowsAffected() < 1 {
+		return fmt.Errorf("no insertion of row while executing query %v", sqlQuery)
+	}
+
 	// Execute Batch SQL Query
-	errExecBatch := b.Close()
+	errExecBatch := r.Close()
 	if errExecBatch != nil {
 
 		return errExecBatch
@@ -177,7 +192,7 @@ func (p *peppamonMetaDB) fetchAllBgpPeers(node string) ([]bgpPeerDBObject, error
 
 	defer cancelQuery()
 
-	rows, err := p.db.QueryEx(ctxTimeout, sqlQuery, nil, node)
+	rows, err := p.db.Query(ctxTimeout, sqlQuery, node)
 
 	if err != nil {
 
@@ -228,7 +243,7 @@ func (p *peppamonMetaDB) fetchAllBgpAFI(node string) ([]bgpAFIDBObject, error) {
 
 	defer cancelQuery()
 
-	rows, err := p.db.QueryEx(ctxTimeout, sqlQuery, nil, node)
+	rows, err := p.db.Query(ctxTimeout, sqlQuery, node)
 
 	if err != nil {
 
@@ -276,7 +291,7 @@ func (p *peppamonMetaDB) deleteBgpPeers(dev, peer, afiType, vrf string) error {
 
 	defer cancelQuery()
 
-	cTag, err := p.db.ExecEx(ctxTimeout, sqlQuery, nil, dev, peer, afiType, vrf)
+	cTag, err := p.db.Exec(ctxTimeout, sqlQuery, dev, peer, afiType, vrf)
 
 	if err != nil {
 
@@ -303,7 +318,7 @@ func (p *peppamonMetaDB) deleteBgpAFI(dev, afiType, vrf string) error {
 
 	defer cancelQuery()
 
-	cTag, err := p.db.ExecEx(ctxTimeout, sqlQuery, nil, dev, afiType, vrf)
+	cTag, err := p.db.Exec(ctxTimeout, sqlQuery, dev, afiType, vrf)
 
 	if err != nil {
 

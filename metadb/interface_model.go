@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/lucabrasi83/peppamon_cisco/logging"
 )
 
@@ -46,43 +47,50 @@ func (p *peppamonMetaDB) PersistsInterfaceMetadata(ifMeta []map[string]interface
 	defer cancelQuery()
 
 	// Prepare SQL Statement in DB for Batch
-	_, err := p.db.PrepareEx(ctxTimeout, "if_meta_query", sqlQuery, nil)
+	//_, err := p.db.PrepareEx(ctxTimeout, "if_meta_query", sqlQuery, nil)
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//b := p.db.BeginBatch()
 
-	if err != nil {
-		return err
-	}
-
-	b := p.db.BeginBatch()
+	b := &pgx.Batch{}
 
 	for _, cp := range ifMeta {
 
-		b.Queue("if_meta_query",
-			[]interface{}{
-				cp["node_id"],
-				cp["timestamps"],
-				cp["if_name"],
-				cp["description"],
-				convertStrToIPv4(cp["ipv4_address"].(string), cp["ipv4_subnet_mask"].(string)),
-				cp["admin_status"],
-				cp["oper_status"],
-				cp["speed"],
-				cp["mtu"],
-				cp["physical_address"],
-				cp["vrf"],
-				cp["last_change"],
-			},
-			nil, nil)
+		b.Queue(sqlQuery,
+
+			cp["node_id"],
+			cp["timestamps"],
+			cp["if_name"],
+			cp["description"],
+			convertStrToIPv4(cp["ipv4_address"].(string), cp["ipv4_subnet_mask"].(string)),
+			cp["admin_status"],
+			cp["oper_status"],
+			cp["speed"],
+			cp["mtu"],
+			cp["physical_address"],
+			cp["vrf"],
+			cp["last_change"],
+		)
 	}
 
 	// Send Batch SQL Query
-	errSendBatch := b.Send(ctxTimeout, nil)
+	// errSendBatch := b.Send(ctxTimeout, nil)
+	r := p.db.SendBatch(ctxTimeout, b)
+	c, errSendBatch := r.Exec()
 
 	if errSendBatch != nil {
 		return errSendBatch
 	}
 
+	if c.RowsAffected() < 1 {
+		return fmt.Errorf("no insertion of row while executing query %v", sqlQuery)
+	}
+
 	// Execute Batch SQL Query
-	errExecBatch := b.Close()
+	errExecBatch := r.Close()
 	if errExecBatch != nil {
 
 		return errExecBatch
@@ -104,7 +112,7 @@ func (p *peppamonMetaDB) fetchAllInterfaces(node string) ([]string, error) {
 
 	defer cancelQuery()
 
-	rows, err := p.db.QueryEx(ctxTimeout, sqlQuery, nil, node)
+	rows, err := p.db.Query(ctxTimeout, sqlQuery, node)
 
 	if err != nil {
 
@@ -147,7 +155,7 @@ func (p *peppamonMetaDB) deleteInterfaces(dev, ifName string) error {
 
 	defer cancelQuery()
 
-	cTag, err := p.db.ExecEx(ctxTimeout, sqlQuery, nil, dev, ifName)
+	cTag, err := p.db.Exec(ctxTimeout, sqlQuery, dev, ifName)
 
 	if err != nil {
 

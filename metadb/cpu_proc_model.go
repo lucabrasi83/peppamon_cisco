@@ -2,6 +2,9 @@ package metadb
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/jackc/pgx/v4"
 )
 
 // PersistsInterfaceMetadata will update the Telemetry Metadata database with interfaces attributes
@@ -29,39 +32,46 @@ func (p *peppamonMetaDB) PersistsCPUProcMetadata(cpuProc []map[string]interface{
 	defer cancelQuery()
 
 	// Prepare SQL Statement in DB for Batch
-	_, err := p.db.PrepareEx(ctxTimeout, "cpu_proc_meta_query", sqlQuery, nil)
+	//_, err := p.db.PrepareEx(ctxTimeout, "cpu_proc_meta_query", sqlQuery, nil)
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//b := p.db.BeginBatch()
 
-	if err != nil {
-		return err
-	}
-
-	b := p.db.BeginBatch()
+	b := &pgx.Batch{}
 
 	for _, cp := range cpuProc {
 
-		b.Queue("cpu_proc_meta_query",
-			[]interface{}{
-				cp["node_id"],
-				cp["timestamps"],
-				cp["proc_name"],
-				cp["pid"],
-				cp["proc_avg_runtime"],
-				cp["cpu_proc_busy_avg_5_sec"],
-				cp["cpu_proc_busy_avg_1_min"],
-				cp["cpu_proc_busy_avg_5_min"],
-			},
-			nil, nil)
+		b.Queue(sqlQuery,
+
+			cp["node_id"],
+			cp["timestamps"],
+			cp["proc_name"],
+			cp["pid"],
+			cp["proc_avg_runtime"],
+			cp["cpu_proc_busy_avg_5_sec"],
+			cp["cpu_proc_busy_avg_1_min"],
+			cp["cpu_proc_busy_avg_5_min"],
+		)
 	}
 
 	// Send Batch SQL Query
-	errSendBatch := b.Send(ctxTimeout, nil)
+	// errSendBatch := b.Send(ctxTimeout, nil)
+	r := p.db.SendBatch(ctxTimeout, b)
+	c, errSendBatch := r.Exec()
 
 	if errSendBatch != nil {
 		return errSendBatch
 	}
 
+	if c.RowsAffected() < 1 {
+		return fmt.Errorf("no insertion of row while executing query %v", sqlQuery)
+	}
+
 	// Execute Batch SQL Query
-	errExecBatch := b.Close()
+	errExecBatch := r.Close()
 	if errExecBatch != nil {
 
 		return errExecBatch

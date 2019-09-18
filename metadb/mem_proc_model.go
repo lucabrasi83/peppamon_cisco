@@ -2,6 +2,9 @@ package metadb
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/jackc/pgx/v4"
 )
 
 // PersistsMemProcMetadata will save the processes memory utilization in the Telemetry Meta DB
@@ -27,38 +30,44 @@ func (p *peppamonMetaDB) PersistsMemProcMetadata(memProc []map[string]interface{
 	defer cancelQuery()
 
 	// Prepare SQL Statement in DB for Batch
-	_, err := p.db.PrepareEx(ctxTimeout, "mem_proc_meta_query", sqlQuery, nil)
-
-	if err != nil {
-		return err
-	}
-
-	b := p.db.BeginBatch()
+	//_, err := p.db.PrepareEx(ctxTimeout, "mem_proc_meta_query", sqlQuery, nil)
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//b := p.db.BeginBatch()
+	b := &pgx.Batch{}
 
 	for _, cp := range memProc {
 
-		b.Queue("mem_proc_meta_query",
-			[]interface{}{
-				cp["node_id"],
-				cp["timestamps"],
-				cp["process_name"],
-				cp["pid"],
-				cp["allocated_memory"],
-				cp["freed_memory"],
-				cp["holding_memory"],
-			},
-			nil, nil)
+		b.Queue(sqlQuery,
+
+			cp["node_id"],
+			cp["timestamps"],
+			cp["process_name"],
+			cp["pid"],
+			cp["allocated_memory"],
+			cp["freed_memory"],
+			cp["holding_memory"],
+		)
 	}
 
 	// Send Batch SQL Query
-	errSendBatch := b.Send(ctxTimeout, nil)
+	// errSendBatch := b.Send(ctxTimeout, nil)
+	r := p.db.SendBatch(ctxTimeout, b)
+	c, errSendBatch := r.Exec()
 
 	if errSendBatch != nil {
 		return errSendBatch
 	}
 
+	if c.RowsAffected() < 1 {
+		return fmt.Errorf("no insertion of row while executing query %v", sqlQuery)
+	}
+
 	// Execute Batch SQL Query
-	errExecBatch := b.Close()
+	errExecBatch := r.Close()
 	if errExecBatch != nil {
 
 		return errExecBatch
