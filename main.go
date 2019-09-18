@@ -12,8 +12,6 @@ import (
 	"sync"
 	"time"
 
-	_ "net/http/pprof"
-
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/lucabrasi83/peppamon_cisco/logging"
