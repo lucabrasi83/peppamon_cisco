@@ -51,48 +51,63 @@ func NewCollector() *Collector {
 // and implements prometheus.Collector interface
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 
-	// IOSd CPU Metrics iosd_cpu_interval.go
-	ch <- cpu5Sec
-	ch <- cpu1Min
-	ch <- cpu5Min
+	// Copy current descriptors in case consumer channel is slow
+	var metricDescriptors []*prometheus.Desc
 
-	// Interface Metrics interfaces_stats.go
-	ch <- ifStatsInOctets
-	ch <- ifStatsOutOctets
-	ch <- ifStatsNumFlaps
-	ch <- ifStatsCRCErrorsIn
-	ch <- ifStatsOutDiscardPkts
-	ch <- ifStatsInDiscardPkts
-	ch <- ifStatsOutErrorPkts
-	ch <- ifStatsInErrorPkts
-	ch <- ifStatsOutBroadcastPkts
-	ch <- ifStatsInBroadcastPkts
-	ch <- ifStatsOutUnicastPkts
-	ch <- ifStatsInUnicastPkts
-	ch <- ifStatsOutMulticastPkts
-	ch <- ifStatsInMulticastPkts
+	c.Mutex.Lock()
+	for _, source := range c.Metrics {
+		for _, metric := range source.Metrics {
+			metricDescriptors = append(metricDescriptors, metric.Metric.Desc())
+		}
+	}
+	c.Mutex.Unlock()
 
-	// QoS Metrics qos_stats.go
-	ch <- ifStatsQoSClassMapClassifiedBytes
-	ch <- ifStatsQoSClassMapClassifiedPackets
-	ch <- ifStatsQoSClassMapQueueOutputBytes
-	ch <- ifStatsQoSClassMapQueueOutputPackets
-	ch <- ifStatsQoSClassMapQueueSizeBytes
-	ch <- ifStatsQoSClassMapQueueSizePackets
-	ch <- ifStatsQoSClassMapQueueDropBytes
-	ch <- ifStatsQoSClassMapQueueDropPackets
+	for _, desc := range metricDescriptors {
+		ch <- desc
+	}
 
-	// IOSd Memory metrics iosd_memory_utilization.go
-	ch <- iosdTotalMemory
-	ch <- iosdUsedMemory
-	ch <- iosdFreeMemory
-
-	// BGP Metrics bgp_metrics.go
-	ch <- bgpIpv4NeighborPrefixesRcvd
-	ch <- bgpGlobalMeta
-
-	// EIGRP Adjancecy Status eigrp_adjacency.go
-	ch <- eigrpAdjStatus
+	//// IOSd CPU Metrics iosd_cpu_interval.go
+	//ch <- cpu5Sec
+	//ch <- cpu1Min
+	//ch <- cpu5Min
+	//
+	//// Interface Metrics interfaces_stats.go
+	//ch <- ifStatsInOctets
+	//ch <- ifStatsOutOctets
+	//ch <- ifStatsNumFlaps
+	//ch <- ifStatsCRCErrorsIn
+	//ch <- ifStatsOutDiscardPkts
+	//ch <- ifStatsInDiscardPkts
+	//ch <- ifStatsOutErrorPkts
+	//ch <- ifStatsInErrorPkts
+	//ch <- ifStatsOutBroadcastPkts
+	//ch <- ifStatsInBroadcastPkts
+	//ch <- ifStatsOutUnicastPkts
+	//ch <- ifStatsInUnicastPkts
+	//ch <- ifStatsOutMulticastPkts
+	//ch <- ifStatsInMulticastPkts
+	//
+	//// QoS Metrics qos_stats.go
+	//ch <- ifStatsQoSClassMapClassifiedBytes
+	//ch <- ifStatsQoSClassMapClassifiedPackets
+	//ch <- ifStatsQoSClassMapQueueOutputBytes
+	//ch <- ifStatsQoSClassMapQueueOutputPackets
+	//ch <- ifStatsQoSClassMapQueueSizeBytes
+	//ch <- ifStatsQoSClassMapQueueSizePackets
+	//ch <- ifStatsQoSClassMapQueueDropBytes
+	//ch <- ifStatsQoSClassMapQueueDropPackets
+	//
+	//// IOSd Memory metrics iosd_memory_utilization.go
+	//ch <- iosdTotalMemory
+	//ch <- iosdUsedMemory
+	//ch <- iosdFreeMemory
+	//
+	//// BGP Metrics bgp_metrics.go
+	//ch <- bgpIpv4NeighborPrefixesRcvd
+	//ch <- bgpGlobalMeta
+	//
+	//// EIGRP Adjancecy Status eigrp_adjacency.go
+	//ch <- eigrpAdjStatus
 
 }
 
