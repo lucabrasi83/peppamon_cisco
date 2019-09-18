@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: peppamon-collector-prom
+    name: peppamon-collector-prom
+  name: peppamon-collector-prom
+  namespace: monitoring
+spec:
+  ports:
+    - port: 2112
+      protocol: TCP
+      targetPort: 2112
+      name: prom      
+  selector:
+    app: peppamon-collector
+  type: ClusterIP
+status:
+  loadBalancer: {}

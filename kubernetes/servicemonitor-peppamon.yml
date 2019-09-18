@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  generation: 1
+  labels:
+    app: peppamon-collector
+    release: peppamon-operator
+  name: peppamon-collector
+  namespace: monitoring
+spec:
+  endpoints:
+  - port: prom
+    path: /metrics
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  selector:
+    matchLabels:
+      name: peppamon-collector-prom

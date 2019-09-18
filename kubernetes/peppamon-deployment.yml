@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: peppamon-collector
+  name: peppamon-collector
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: peppamon-collector
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: peppamon-collector
+    spec:
+      containers:
+      - image: tatacomm/peppamon_collector:beta
+        name: peppamon-collector
+        imagePullPolicy: Always
+        stdin: true 
+        tty: true
+        ports:
+        - containerPort: 50051
+        - containerPort: 2112
+        env:
+            - name: PEPPAMON_METADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: peppamon-collector-secrets
+                  key: PEPPAMON_METADB_USERNAME
+            - name: PEPPAMON_METADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: peppamon-collector-secrets
+                  key: PEPPAMON_METADB_PASSWORD
+
+            - name: PEPPAMON_METADB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: peppamon-collector-secrets
+                  key: PEPPAMON_METADB_HOST
+
+            - name: PEPPAMON_METADB_DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: peppamon-collector-secrets
+                  key: PEPPAMON_METADB_DATABASE_NAME
+        resources:
+          limits:
+            cpu: "4"
+            memory: 2Gi
+          requests:
+            cpu: "2"
+            memory: 2Gi
+      imagePullSecrets:
+        - name: docker-secret
+status: {}
