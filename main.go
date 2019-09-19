@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
 
@@ -55,8 +56,9 @@ func main() {
 
 	// Set gRPC Server Keepalive Settings
 	grpcServerKeepalives := keepalive.ServerParameters{
-		Time:    10 * time.Second,
-		Timeout: 30 * time.Second,
+		MaxConnectionIdle: 5 * time.Minute,
+		Time:              10 * time.Second,
+		Timeout:           30 * time.Second,
 	}
 	grpcServerOptions := grpc.KeepaliveParams(grpcServerKeepalives)
 
@@ -155,7 +157,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 
 	logging.PeppaMonLog(
 		"info",
-		fmt.Sprintf("Client %v initiating gRPC Telemetry Stream...", clientIPSocket))
+		fmt.Sprintf("Client Socket %v initiating gRPC Telemetry Stream...", clientIPSocket))
 
 	// Make sure we only the Telemetry subscription once to avoid flooding stdout
 	logFlag := false
@@ -204,7 +206,8 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		// The Metrics Source represents the metrics cache key and is a combination of gRPC client socket
 		// and YANG encoding path
 		msgPath := msg.GetEncodingPath()
-		telemetrySource = metrics.Source{Addr: clientIPSocket, Path: msgPath}
+		clientIP := strings.Split(clientIPSocket, ":")
+		telemetrySource = metrics.Source{Addr: clientIP[0], Path: msgPath}
 
 		// Instantiate Device Metrics Cache
 		devMutex := &sync.Mutex{}
