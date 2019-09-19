@@ -13,8 +13,8 @@ var CiscoMetricRegistrar []CiscoTelemetryMetric
 // Source represents the cache key for a metric
 // Addr corresponds to the Telemetry client IP Socket and Path to the YANG schema path
 type Source struct {
-	Addr string
-	Path string
+	NodeID string
+	Path   string
 }
 
 // Collector represents the Peppamon Telemetry collector that will carry all the metrics collected

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -206,8 +205,8 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		// The Metrics Source represents the metrics cache key and is a combination of gRPC client socket
 		// and YANG encoding path
 		msgPath := msg.GetEncodingPath()
-		clientIP := strings.Split(clientIPSocket, ":")
-		telemetrySource = metrics.Source{Addr: clientIP[0], Path: msgPath}
+		telemetryNodeID := msg.GetNodeIdStr()
+		telemetrySource = metrics.Source{NodeID: telemetryNodeID, Path: msgPath}
 
 		// Instantiate Device Metrics Cache
 		devMutex := &sync.Mutex{}
