@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 )
@@ -52,7 +53,14 @@ func main() {
 
 	}
 
-	s := grpc.NewServer()
+	// Set gRPC Server Keepalive Settings
+	grpcServerKeepalives := keepalive.ServerParameters{
+		Time:    10 * time.Second,
+		Timeout: 30 * time.Second,
+	}
+	grpcServerOptions := grpc.KeepaliveParams(grpcServerKeepalives)
+
+	s := grpc.NewServer(grpcServerOptions)
 
 	mdt_dialout.RegisterGRPCMdtDialoutServer(s, &HighObsSrv{})
 
@@ -68,6 +76,7 @@ func main() {
 
 	promHTTPSrv := http.Server{Addr: ":2112"}
 
+	// Start Peppamon gRPC Telemetry Collector
 	go func() {
 		if err := s.Serve(lis); err != nil {
 
@@ -78,6 +87,7 @@ func main() {
 		}
 	}()
 
+	// Start Prometheus HTTP handler
 	go func() {
 		logging.PeppaMonLog(
 			"info",
@@ -113,7 +123,6 @@ func main() {
 	logging.PeppaMonLog("warning", "Shutting down Peppamon server...")
 
 	// Stop Prom HTTP, GRPC server
-
 	ctxPromHTTP, ctxCancel := context.WithTimeout(context.Background(), 3*time.Second)
 
 	defer ctxCancel()
@@ -135,6 +144,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 	s.exp = collector
 
 	var clientIPSocket string
+	var telemetrySource metrics.Source
 
 	// Extract gRPC client IP for logging purpose
 	clientIPNet, ok := peer.FromContext(stream.Context())
@@ -151,15 +161,25 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 	logFlag := false
 
 	for {
-
 		req, err := stream.Recv()
+
 		if err == io.EOF {
 			return nil
 		}
+
+		// Handle client disconnection error
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
 				fmt.Sprintf("Error while reading client %v stream: %v", clientIPSocket, err))
+
+			// Removing Metrics from cache
+			s.exp.Mutex.Lock()
+			if _, ok := s.exp.Metrics[telemetrySource]; ok {
+
+				delete(s.exp.Metrics, telemetrySource)
+			}
+			s.exp.Mutex.Unlock()
 
 			return err
 		}
@@ -181,30 +201,26 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 			return err
 		}
 
+		// The Metrics Source represents the metrics cache key and is a combination of gRPC client socket
+		// and YANG encoding path
+		msgPath := msg.GetEncodingPath()
+		telemetrySource = metrics.Source{Addr: clientIPSocket, Path: msgPath}
+
 		// Instantiate Device Metrics Cache
 		devMutex := &sync.Mutex{}
 		deviceMetrics := &metrics.DeviceGroupedMetrics{Mutex: devMutex}
-		source := metrics.Source{Addr: clientIPSocket, Path: msg.GetEncodingPath()}
-
-		s.exp.Mutex.Lock()
 
 		// If Metric cache key already exists, invalidate and remove it
 		// Otherwise dashboard may show arbitrary / constant values
 		// See https://stackoverflow.com/questions/57304563/prometheus-exporter-direct-instrumentation-vs-custom-collector
-		if _, ok := s.exp.Metrics[source]; ok {
-			delete(s.exp.Metrics, source)
+		s.exp.Mutex.Lock()
+
+		if _, ok := s.exp.Metrics[telemetrySource]; ok {
+			delete(s.exp.Metrics, telemetrySource)
 		}
 
-		s.exp.Metrics[source] = deviceMetrics
+		s.exp.Metrics[telemetrySource] = deviceMetrics
 		s.exp.Mutex.Unlock()
-
-		// Remove metric from cache at the end of gRPC call
-		// See https://stackoverflow.com/questions/57304563/prometheus-exporter-direct-instrumentation-vs-custom-collector
-		defer func() {
-			s.exp.Mutex.Lock()
-			delete(s.exp.Metrics, source)
-			s.exp.Mutex.Unlock()
-		}()
 
 		// Limit logging of Telemetry client connections
 		if !logFlag {

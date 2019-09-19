@@ -162,15 +162,16 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
 					metricMutex := &sync.Mutex{}
 					m := DeviceUnaryMetric{Mutex: metricMutex}
 
-					m.Metric = prometheus.MustNewConstMetric(
-						bgpIpv4NeighborPrefixesRcvd,
-						prometheus.GaugeValue,
-						float64(BgpIpv4NeighborObj["neighbor_prefixes_received"].(uint64)),
-						msg.GetNodeIdStr(),
-						neighborID.(string),
-						BgpIpv4NeighborObj["address_family_type"].(string),
-						BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
-					)
+					m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
+						prometheus.MustNewConstMetric(
+							bgpIpv4NeighborPrefixesRcvd,
+							prometheus.GaugeValue,
+							float64(BgpIpv4NeighborObj["neighbor_prefixes_received"].(uint64)),
+							msg.GetNodeIdStr(),
+							neighborID.(string),
+							BgpIpv4NeighborObj["address_family_type"].(string),
+							BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
+						))
 
 					dm.Mutex.Lock()
 					dm.Metrics = append(dm.Metrics, m)

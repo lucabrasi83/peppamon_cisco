@@ -29,14 +29,6 @@ func (p *peppamonMetaDB) PersistsMemProcMetadata(memProc []map[string]interface{
 
 	defer cancelQuery()
 
-	// Prepare SQL Statement in DB for Batch
-	//_, err := p.db.PrepareEx(ctxTimeout, "mem_proc_meta_query", sqlQuery, nil)
-	//
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//b := p.db.BeginBatch()
 	b := &pgx.Batch{}
 
 	for _, cp := range memProc {
@@ -54,7 +46,6 @@ func (p *peppamonMetaDB) PersistsMemProcMetadata(memProc []map[string]interface{
 	}
 
 	// Send Batch SQL Query
-	// errSendBatch := b.Send(ctxTimeout, nil)
 	r := p.db.SendBatch(ctxTimeout, b)
 	c, errSendBatch := r.Exec()
 

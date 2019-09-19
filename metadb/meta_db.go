@@ -21,7 +21,6 @@ import (
 // db represents an instance of Postgres connection pool
 var ConnPool *pgxpool.Pool
 var DBInstance *peppamonMetaDB
-var connPoolConfig pgxpool.Config
 
 const (
 	shortQueryTimeout = 10 * time.Second
@@ -65,26 +64,6 @@ func init() {
 
 	var err error
 
-	//connPoolConfig = pgx.ConnPoolConfig{
-	//	ConnConfig: pgx.ConnConfig{
-	//		Host: os.Getenv("PEPPAMON_METADB_HOST"),
-	//
-	//		TLSConfig: &tls.Config{
-	//			ServerName: os.Getenv("PEPPAMON_METADB_HOST"),
-	//			RootCAs:    certPool,
-	//		},
-	//		User:     os.Getenv("PEPPAMON_METADB_USERNAME"),
-	//		Password: os.Getenv("PEPPAMON_METADB_PASSWORD"),
-	//		Database: os.Getenv("PEPPAMON_METADB_DATABASE_NAME"),
-	//		Dial: (&net.Dialer{
-	//			KeepAlive: 30 * time.Second,
-	//			Timeout:   10 * time.Second,
-	//		}).Dial,
-	//		// TargetSessionAttrs: "read-write",
-	//	},
-	//	MaxConnections: 50,
-	//}
-
 	// pgx v4 requires config struct to be generated using ParseConfig method
 	poolConfig, errParsePool := pgxpool.ParseConfig("")
 
@@ -113,7 +92,6 @@ func init() {
 		}).DialContext
 
 	ConnPool, err = pgxpool.ConnectConfig(context.Background(), poolConfig)
-	// ConnPool, err = pgx.NewConnPool(connPoolConfig)
 
 	if err != nil {
 		logging.PeppaMonLog(

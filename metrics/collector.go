@@ -17,26 +17,31 @@ type Source struct {
 	Path string
 }
 
+// Collector represents the Peppamon Telemetry collector that will carry all the metrics collected
 type Collector struct {
 	Mutex   *sync.Mutex
 	Metrics map[Source]*DeviceGroupedMetrics
 }
 
+// DeviceUnaryMetric represents a single Device Metric
 type DeviceUnaryMetric struct {
 	Mutex  *sync.Mutex
 	Metric prometheus.Metric
 }
 
+// DeviceGroupedMetrics represents a set of grouped metrics
 type DeviceGroupedMetrics struct {
 	Mutex   *sync.Mutex
 	Metrics []DeviceUnaryMetric
 }
 
+// CiscoTelemetryMetric represents a Cisco IOS-XE telemetry metric sent in protocol buffer format
 type CiscoTelemetryMetric struct {
 	EncodingPath     string
 	RecordMetricFunc func(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics)
 }
 
+// NewCollector will create a new instance of a Peppamon Collector
 func NewCollector() *Collector {
 
 	mu := &sync.Mutex{}
@@ -65,50 +70,6 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	for _, desc := range metricDescriptors {
 		ch <- desc
 	}
-
-	//// IOSd CPU Metrics iosd_cpu_interval.go
-	//ch <- cpu5Sec
-	//ch <- cpu1Min
-	//ch <- cpu5Min
-	//
-	//// Interface Metrics interfaces_stats.go
-	//ch <- ifStatsInOctets
-	//ch <- ifStatsOutOctets
-	//ch <- ifStatsNumFlaps
-	//ch <- ifStatsCRCErrorsIn
-	//ch <- ifStatsOutDiscardPkts
-	//ch <- ifStatsInDiscardPkts
-	//ch <- ifStatsOutErrorPkts
-	//ch <- ifStatsInErrorPkts
-	//ch <- ifStatsOutBroadcastPkts
-	//ch <- ifStatsInBroadcastPkts
-	//ch <- ifStatsOutUnicastPkts
-	//ch <- ifStatsInUnicastPkts
-	//ch <- ifStatsOutMulticastPkts
-	//ch <- ifStatsInMulticastPkts
-	//
-	//// QoS Metrics qos_stats.go
-	//ch <- ifStatsQoSClassMapClassifiedBytes
-	//ch <- ifStatsQoSClassMapClassifiedPackets
-	//ch <- ifStatsQoSClassMapQueueOutputBytes
-	//ch <- ifStatsQoSClassMapQueueOutputPackets
-	//ch <- ifStatsQoSClassMapQueueSizeBytes
-	//ch <- ifStatsQoSClassMapQueueSizePackets
-	//ch <- ifStatsQoSClassMapQueueDropBytes
-	//ch <- ifStatsQoSClassMapQueueDropPackets
-	//
-	//// IOSd Memory metrics iosd_memory_utilization.go
-	//ch <- iosdTotalMemory
-	//ch <- iosdUsedMemory
-	//ch <- iosdFreeMemory
-	//
-	//// BGP Metrics bgp_metrics.go
-	//ch <- bgpIpv4NeighborPrefixesRcvd
-	//ch <- bgpGlobalMeta
-	//
-	//// EIGRP Adjancecy Status eigrp_adjacency.go
-	//ch <- eigrpAdjStatus
-
 }
 
 // Collect method implements prometheus.Collector interface and is executed upon each scrape
@@ -126,7 +87,6 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		}
 
 	}
-
 	c.Mutex.Unlock()
 
 	for _, metric := range metrics {
@@ -142,5 +102,5 @@ func convTelemetryTimestampToTime(msg *telemetry.Telemetry) time.Time {
 	msgTimestamps := msg.GetMsgTimestamp()
 	promTimestamp := time.Unix(int64(msgTimestamps)/1000, 0)
 
-	return promTimestamp
+	return promTimestamp.UTC()
 }

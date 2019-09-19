@@ -112,6 +112,7 @@ func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 				float64(val),
 				msg.GetNodeIdStr(),
 			))
+
 			dm.Mutex.Lock()
 			dm.Metrics = append(dm.Metrics, m)
 			dm.Mutex.Unlock()

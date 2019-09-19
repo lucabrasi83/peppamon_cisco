@@ -54,14 +54,6 @@ func (p *peppamonMetaDB) PersistsBgpAfiMetadata(bgpAfiMeta []map[string]interfac
 
 	defer cancelQuery()
 
-	// Prepare SQL Statement in DB for Batch
-	//_, err := p.db.PrepareEx(ctxTimeout, "bgp_afi_meta_query", sqlQuery, nil)
-	//
-	//if err != nil {
-	//	return err
-	//}
-
-	// b := p.db.BeginBatch()
 	b := &pgx.Batch{}
 
 	for _, cp := range bgpAfiMeta {
@@ -80,8 +72,6 @@ func (p *peppamonMetaDB) PersistsBgpAfiMetadata(bgpAfiMeta []map[string]interfac
 	// Send Batch SQL Query
 	r := p.db.SendBatch(ctxTimeout, b)
 	c, errSendBatch := r.Exec()
-
-	// errSendBatch := b.Send(ctxTimeout, nil)
 
 	if errSendBatch != nil {
 		return errSendBatch
@@ -129,15 +119,6 @@ func (p *peppamonMetaDB) PersistsBgpPeersMetadata(bgpPeers []map[string]interfac
 
 	defer cancelQuery()
 
-	// Prepare SQL Statement in DB for Batch
-	//_, err := p.db.PrepareEx(ctxTimeout, "bgp_neighbor_proc_meta_query", sqlQuery, nil)
-	//
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//b := p.db.BeginBatch()
-
 	b := &pgx.Batch{}
 
 	for _, cp := range bgpPeers {
@@ -156,7 +137,6 @@ func (p *peppamonMetaDB) PersistsBgpPeersMetadata(bgpPeers []map[string]interfac
 	}
 
 	// Send Batch SQL Query
-	//errSendBatch := b.Send(ctxTimeout, nil)
 	r := p.db.SendBatch(ctxTimeout, b)
 	c, errSendBatch := r.Exec()
 

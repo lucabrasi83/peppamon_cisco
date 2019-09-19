@@ -97,12 +97,12 @@ func ParsePBMsgIOSdMemoryUsage(msg *telemetry.Telemetry, dm *DeviceGroupedMetric
 			metricMutex := &sync.Mutex{}
 			m := DeviceUnaryMetric{Mutex: metricMutex}
 
-			m.Metric = prometheus.MustNewConstMetric(
+			m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg), prometheus.MustNewConstMetric(
 				iosdFreeMemory,
 				prometheus.GaugeValue,
 				float64(val),
 				msg.GetNodeIdStr(),
-			)
+			))
 
 			dm.Mutex.Lock()
 			dm.Metrics = append(dm.Metrics, m)
