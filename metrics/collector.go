@@ -11,7 +11,7 @@ import (
 var CiscoMetricRegistrar []CiscoTelemetryMetric
 
 // Source represents the cache key for a metric
-// Addr corresponds to the Telemetry client IP Socket and Path to the YANG schema path
+// Addr corresponds to the Telemetry NodeID and Path to the YANG schema path
 type Source struct {
 	NodeID string
 	Path   string

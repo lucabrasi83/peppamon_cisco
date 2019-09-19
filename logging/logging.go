@@ -1,4 +1,4 @@
-// Package logging handles logging to StdOut and Writer vulscano.log
+// Package logging handles logging to StdOut and Writer
 package logging
 
 import (

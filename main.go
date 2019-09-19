@@ -202,7 +202,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 			return err
 		}
 
-		// The Metrics Source represents the metrics cache key and is a combination of gRPC client socket
+		// The Metrics Source represents the metrics cache key and is a combination of the Telemetry NodeID
 		// and YANG encoding path
 		msgPath := msg.GetEncodingPath()
 		telemetryNodeID := msg.GetNodeIdStr()
