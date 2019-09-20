@@ -262,7 +262,7 @@ func mapBgpNeighborFSMToInteger(status string) string {
 
 	// Neighbor FSM Status mapped to Integer for Grafana cell coloring
 	// Workaround until Grafana allows mapping of colors to string values
-	ifStatusMap := map[string]string{
+	peerStatusMap := map[string]string{
 		"fsm-idle":        "0",
 		"fsm-connect":     "1",
 		"fsm-active":      "2",
@@ -271,5 +271,5 @@ func mapBgpNeighborFSMToInteger(status string) string {
 		"fsm-established": "5",
 	}
 
-	return ifStatusMap[status]
+	return peerStatusMap[status]
 }
