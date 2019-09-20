@@ -27,6 +27,13 @@ var (
 		[]string{"node", "local_neighbor_id", "local_as"},
 		nil,
 	)
+
+	bgpIpv4PeerStatus = prometheus.NewDesc(
+		"cisco_iosxe_bgp_neighbor_peer_status",
+		"The status of a BGP IPv4 unicast peer",
+		[]string{"node", "neighbor_id", "address_family", "vrf"},
+		nil,
+	)
 )
 
 const (
@@ -175,6 +182,28 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
 
 					dm.Mutex.Lock()
 					dm.Metrics = append(dm.Metrics, m)
+					dm.Mutex.Unlock()
+
+					// Instrument BGP peer status
+					metricMutexPeer := &sync.Mutex{}
+					mPeer := DeviceUnaryMetric{Mutex: metricMutexPeer}
+
+					// Convert the Peer Status to float64
+					peerStatusToFloat, _ := strconv.ParseFloat(BgpIpv4NeighborObj["neighbor_status"].(string), 64)
+
+					mPeer.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
+						prometheus.MustNewConstMetric(
+							bgpIpv4PeerStatus,
+							prometheus.GaugeValue,
+							peerStatusToFloat,
+							msg.GetNodeIdStr(),
+							neighborID.(string),
+							BgpIpv4NeighborObj["address_family_type"].(string),
+							BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
+						))
+
+					dm.Mutex.Lock()
+					dm.Metrics = append(dm.Metrics, mPeer)
 					dm.Mutex.Unlock()
 
 					BgpIpv4NeighborsSlice = append(BgpIpv4NeighborsSlice, BgpIpv4NeighborObj)
