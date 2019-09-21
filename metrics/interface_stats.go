@@ -258,13 +258,12 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 
 		interfaceName := i.Fields[0].Fields[0].GetStringValue()
 
-		timestamps := time.Now().Unix()
-
+		timestamp := convTelemetryTimestampToTime(msg)
 		// Extract CPE Hostname
 		nodeName := msg.GetNodeIdStr()
 
 		// Instrument interface metadata
-		ifMeta := recordInterfaceMeta(i.Fields[1].Fields, interfaceName, nodeName, timestamps)
+		ifMeta := recordInterfaceMeta(i.Fields[1].Fields, interfaceName, nodeName, timestamp)
 
 		// Loop through the statistics leafs
 		for _, m := range i.Fields[1].Fields {
@@ -703,13 +702,12 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 	}()
 }
 
-func recordInterfaceMeta(fields []*telemetry.TelemetryField, ifName string, node string,
-	t int64) map[string]interface{} {
+func recordInterfaceMeta(fields []*telemetry.TelemetryField, ifName string, node string, t time.Time) map[string]interface{} {
 
 	ifMetaMap := make(map[string]interface{})
 
 	ifMetaMap["node_id"] = node
-	ifMetaMap["timestamps"] = t
+	ifMetaMap["timestamps"] = t.Unix()
 	ifMetaMap["if_name"] = ifName
 
 	for _, f := range fields {
