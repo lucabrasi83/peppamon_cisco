@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"sync"
+	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,7 +55,7 @@ func init() {
 	})
 }
 
-func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
+func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
 
 	var ProcCPUSlice []map[string]interface{}
 
@@ -69,13 +70,12 @@ func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 			metricMutex := &sync.Mutex{}
 			m := DeviceUnaryMetric{Mutex: metricMutex}
 
-			m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-				prometheus.MustNewConstMetric(
-					cpu5Sec,
-					prometheus.GaugeValue,
-					float64(val),
-					msg.GetNodeIdStr(),
-				))
+			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+				cpu5Sec,
+				prometheus.GaugeValue,
+				float64(val),
+				msg.GetNodeIdStr(),
+			))
 
 			dm.Mutex.Lock()
 			dm.Metrics = append(dm.Metrics, m)
@@ -88,7 +88,7 @@ func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 			metricMutex := &sync.Mutex{}
 			m := DeviceUnaryMetric{Mutex: metricMutex}
 
-			m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg), prometheus.MustNewConstMetric(
+			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
 				cpu1Min,
 				prometheus.GaugeValue,
 				float64(val),
@@ -106,7 +106,7 @@ func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 			metricMutex := &sync.Mutex{}
 			m := DeviceUnaryMetric{Mutex: metricMutex}
 
-			m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg), prometheus.MustNewConstMetric(
+			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
 				cpu5Min,
 				prometheus.GaugeValue,
 				float64(val),

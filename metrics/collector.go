@@ -38,7 +38,7 @@ type DeviceGroupedMetrics struct {
 // CiscoTelemetryMetric represents a Cisco IOS-XE telemetry metric sent in protocol buffer format
 type CiscoTelemetryMetric struct {
 	EncodingPath     string
-	RecordMetricFunc func(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics)
+	RecordMetricFunc func(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time)
 }
 
 // NewCollector will create a new instance of a Peppamon Collector
@@ -93,14 +93,4 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- metric
 	}
 
-}
-
-// convTelemetryTimestampToTime is a helper function that processes Timestamps from Telemetry messages and convert
-// as a Time type
-func convTelemetryTimestampToTime(msg *telemetry.Telemetry) time.Time {
-	// Extract Timestamp from Telemetry message
-	msgTimestamps := msg.GetMsgTimestamp()
-	promTimestamp := time.Unix(int64(msgTimestamps)/1000, 0)
-
-	return promTimestamp.UTC()
 }

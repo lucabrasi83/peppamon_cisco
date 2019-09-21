@@ -37,7 +37,7 @@ func init() {
 	})
 }
 
-func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
+func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
 
 	var ProcMemObjSlice []map[string]interface{}
 

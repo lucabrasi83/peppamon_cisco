@@ -239,11 +239,15 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		// Flag to determine whether the Telemetry device streams accepted YANG Node path
 		yangPathSupported := false
 
+		// Convert Proto Msg Timestamp to type Time for Prometheus metric
+		timestamp := msg.GetMsgTimestamp()
+		promTimestamp := time.Unix(int64(timestamp)/1000, 0)
+
 		for _, m := range metrics.CiscoMetricRegistrar {
 			if msg.EncodingPath == m.EncodingPath {
 
 				yangPathSupported = true
-				go m.RecordMetricFunc(msg, deviceMetrics)
+				go m.RecordMetricFunc(msg, deviceMetrics, promTimestamp.UTC())
 			}
 		}
 

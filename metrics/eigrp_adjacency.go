@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"sync"
+	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
 	"github.com/prometheus/client_golang/prometheus"
@@ -41,7 +42,7 @@ func init() {
 	})
 }
 
-func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
+func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
 
 	for _, p := range msg.DataGpbkv {
 
@@ -72,7 +73,7 @@ func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
 		metricMutex := &sync.Mutex{}
 		m := DeviceUnaryMetric{Mutex: metricMutex}
 
-		m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg), prometheus.MustNewConstMetric(
+		m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
 			eigrpAdjStatus,
 			prometheus.GaugeValue,
 			1,

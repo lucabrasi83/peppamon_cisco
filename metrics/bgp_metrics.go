@@ -85,7 +85,7 @@ func init() {
 	})
 }
 
-func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
+func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
 
 	var BgpIpv4NeighborsSlice []map[string]interface{}
 
@@ -169,16 +169,15 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
 					metricMutex := &sync.Mutex{}
 					m := DeviceUnaryMetric{Mutex: metricMutex}
 
-					m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-						prometheus.MustNewConstMetric(
-							bgpIpv4NeighborPrefixesRcvd,
-							prometheus.GaugeValue,
-							float64(BgpIpv4NeighborObj["neighbor_prefixes_received"].(uint64)),
-							msg.GetNodeIdStr(),
-							neighborID.(string),
-							BgpIpv4NeighborObj["address_family_type"].(string),
-							BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
-						))
+					m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						bgpIpv4NeighborPrefixesRcvd,
+						prometheus.GaugeValue,
+						float64(BgpIpv4NeighborObj["neighbor_prefixes_received"].(uint64)),
+						msg.GetNodeIdStr(),
+						neighborID.(string),
+						BgpIpv4NeighborObj["address_family_type"].(string),
+						BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
+					))
 
 					dm.Mutex.Lock()
 					dm.Metrics = append(dm.Metrics, m)
@@ -191,16 +190,15 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
 					// Convert the Peer Status to float64
 					peerStatusToFloat, _ := strconv.ParseFloat(BgpIpv4NeighborObj["neighbor_status"].(string), 64)
 
-					mPeer.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-						prometheus.MustNewConstMetric(
-							bgpIpv4PeerStatus,
-							prometheus.GaugeValue,
-							peerStatusToFloat,
-							msg.GetNodeIdStr(),
-							neighborID.(string),
-							BgpIpv4NeighborObj["address_family_type"].(string),
-							BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
-						))
+					mPeer.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						bgpIpv4PeerStatus,
+						prometheus.GaugeValue,
+						peerStatusToFloat,
+						msg.GetNodeIdStr(),
+						neighborID.(string),
+						BgpIpv4NeighborObj["address_family_type"].(string),
+						BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
+					))
 
 					dm.Mutex.Lock()
 					dm.Metrics = append(dm.Metrics, mPeer)
@@ -218,7 +216,7 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
 	metricMutex := &sync.Mutex{}
 	m := DeviceUnaryMetric{Mutex: metricMutex}
 
-	m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg), prometheus.MustNewConstMetric(
+	m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
 		bgpGlobalMeta,
 		prometheus.GaugeValue,
 		1,

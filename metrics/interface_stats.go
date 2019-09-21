@@ -248,7 +248,7 @@ func init() {
 	})
 }
 
-func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics) {
+func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
 
 	//Store Interfaces Metadata in slice
 	ifMetaSlice := make([]map[string]interface{}, 0, len(msg.DataGpbkv))
@@ -258,12 +258,11 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 
 		interfaceName := i.Fields[0].Fields[0].GetStringValue()
 
-		timestamp := convTelemetryTimestampToTime(msg)
 		// Extract CPE Hostname
 		nodeName := msg.GetNodeIdStr()
 
 		// Instrument interface metadata
-		ifMeta := recordInterfaceMeta(i.Fields[1].Fields, interfaceName, nodeName, timestamp)
+		ifMeta := recordInterfaceMeta(i.Fields[1].Fields, interfaceName, nodeName, t)
 
 		// Loop through the statistics leafs
 		for _, m := range i.Fields[1].Fields {
@@ -280,14 +279,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutOctets,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutOctets,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -300,14 +298,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInOctets,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInOctets,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -320,14 +317,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInErrorPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInErrorPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -340,14 +336,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutErrorPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutErrorPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -360,14 +355,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInDiscardPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInDiscardPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -380,14 +374,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutDiscardPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutDiscardPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -412,14 +405,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutOctets,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutOctets,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -432,14 +424,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInOctets,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInOctets,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -452,14 +443,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsNumFlaps,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsNumFlaps,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -471,14 +461,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsCRCErrorsIn,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsCRCErrorsIn,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -490,14 +479,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutDiscardPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutDiscardPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -509,14 +497,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInDiscardPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInDiscardPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -528,14 +515,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInErrorPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInErrorPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -547,14 +533,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutErrorPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutErrorPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -566,14 +551,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutBroadcastPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutBroadcastPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -585,14 +569,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInBroadcastPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInBroadcastPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -604,14 +587,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutUnicastPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutUnicastPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -623,14 +605,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInUnicastPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInUnicastPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -642,14 +623,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsOutMulticastPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsOutMulticastPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -661,14 +641,13 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 						metricMutex := &sync.Mutex{}
 						m := DeviceUnaryMetric{Mutex: metricMutex}
 
-						m.Metric = prometheus.NewMetricWithTimestamp(convTelemetryTimestampToTime(msg),
-							prometheus.MustNewConstMetric(
-								ifStatsInMulticastPkts,
-								prometheus.CounterValue,
-								float64(val),
-								nodeName,
-								interfaceName,
-							))
+						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							ifStatsInMulticastPkts,
+							prometheus.CounterValue,
+							float64(val),
+							nodeName,
+							interfaceName,
+						))
 
 						dm.Mutex.Lock()
 						dm.Metrics = append(dm.Metrics, m)
@@ -680,7 +659,7 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 			}
 			if m.GetName() == "diffserv-info" {
 
-				go instrumentQoSStats(m.Fields, interfaceName, nodeName, dm, convTelemetryTimestampToTime(msg))
+				go instrumentQoSStats(m.Fields, interfaceName, nodeName, dm, t)
 
 			}
 
