@@ -37,11 +37,11 @@ func init() {
 	})
 }
 
-func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	var ProcMemObjSlice []map[string]interface{}
 
-	timestamps := time.Now().Unix()
+	timestamps := t
 
 	for _, p := range msg.DataGpbkv {
 
@@ -51,13 +51,13 @@ func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 			switch procMeta.GetName() {
 			case yangIOSdMemProcPID:
 
-				ProcMemObj["node_id"] = msg.GetNodeIdStr()
-				ProcMemObj["timestamps"] = timestamps
+				ProcMemObj["node_id"] = node
+				ProcMemObj["timestamps"] = timestamps.Unix()
 
-				ProcMemObj["pid"] = procMeta.GetUint32Value()
+				ProcMemObj["pid"] = extractGPBKVNativeTypeFromOneof(procMeta, true)
 
 			case yangIOSdMemProcName:
-				ProcMemObj["process_name"] = procMeta.GetStringValue()
+				ProcMemObj["process_name"] = extractGPBKVNativeTypeFromOneof(procMeta, false)
 			}
 		}
 
@@ -66,13 +66,13 @@ func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 			switch procMemUsage.GetName() {
 
 			case yangIOSdMemProcAllocated:
-				ProcMemObj["allocated_memory"] = procMemUsage.GetUint64Value()
+				ProcMemObj["allocated_memory"] = extractGPBKVNativeTypeFromOneof(procMemUsage, true)
 
 			case yangIOSdMemProcFreed:
-				ProcMemObj["freed_memory"] = procMemUsage.GetUint64Value()
+				ProcMemObj["freed_memory"] = extractGPBKVNativeTypeFromOneof(procMemUsage, true)
 
 			case yangIOSdMemProcHolding:
-				ProcMemObj["holding_memory"] = procMemUsage.GetUint64Value()
+				ProcMemObj["holding_memory"] = extractGPBKVNativeTypeFromOneof(procMemUsage, true)
 
 			}
 		}
@@ -83,6 +83,6 @@ func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 	if err != nil {
 		logging.PeppaMonLog(
 			"error",
-			fmt.Sprintf("Failed to insert Memory processes metadata for node %v: %v", msg.GetNodeIdStr(), err))
+			fmt.Sprintf("Failed to insert Memory processes metadata for node %v: %v", node, err))
 	}
 }

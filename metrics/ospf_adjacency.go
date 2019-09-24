@@ -3,7 +3,6 @@ package metrics
 import (
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
@@ -49,7 +48,7 @@ func init() {
 	})
 }
 
-func parseOSPFAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func parseOSPFAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	for _, p := range msg.DataGpbkv {
 
@@ -59,13 +58,19 @@ func parseOSPFAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.
 		for _, ospfInstance := range p.Fields[0].Fields {
 			switch ospfInstance.GetName() {
 			case yangOspfInstanceID:
-				ospfAdjObj["instance_id"] = strconv.Itoa(int(ospfInstance.GetUint32Value()))
+				val := extractGPBKVNativeTypeFromOneof(ospfInstance, true)
+				ospfAdjObj["instance_id"] = strconv.Itoa(int(val.(float64)))
+
 			case yangOspfAreaID:
-				ospfAdjObj["area_id"] = strconv.Itoa(int(ospfInstance.GetUint32Value()))
+				val := extractGPBKVNativeTypeFromOneof(ospfInstance, true)
+				ospfAdjObj["area_id"] = strconv.Itoa(int(val.(float64)))
 			case yangOspfAdjInterface:
-				ospfAdjObj["interface"] = ospfInstance.GetStringValue()
+				val := extractGPBKVNativeTypeFromOneof(ospfInstance, false)
+				ospfAdjObj["interface"] = val.(string)
 			case yangOspfAdjNeighborID:
-				ospfAdjObj["neighbor_id"] = intToIP4(int64(ospfInstance.GetUint32Value()))
+				val := extractGPBKVNativeTypeFromOneof(ospfInstance, true)
+				ipv4 := intToIP4(int64(val.(float64)))
+				ospfAdjObj["neighbor_id"] = ipv4
 
 			}
 		}
@@ -73,33 +78,27 @@ func parseOSPFAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.
 			switch ospfNbrStatus.GetName() {
 
 			case yangOspfAdjNeighborAddress:
-				ospfAdjObj["neighbor_ip"] = ospfNbrStatus.GetStringValue()
+				ospfAdjObj["neighbor_ip"] = extractGPBKVNativeTypeFromOneof(ospfNbrStatus, false)
 			case yangOspfAdjNeighborState:
-				ospfAdjObj["neighbor_status"] = ospfNbrStatusToNum(ospfNbrStatus.GetStringValue())
+				val := extractGPBKVNativeTypeFromOneof(ospfNbrStatus, false)
+				ospfAdjObj["neighbor_status"] = ospfNbrStatusToNum(val.(string))
 
 			}
 		}
 
 		// Instrument OSPF Adjacency Status
-
-		metricMutex := &sync.Mutex{}
-		m := DeviceUnaryMetric{Mutex: metricMutex}
-
-		m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+		CreatePromMetric(
+			ospfAdjObj["neighbor_status"],
 			ospfAdjStatus,
 			prometheus.GaugeValue,
-			ospfAdjObj["neighbor_status"].(float64),
-			msg.GetNodeIdStr(),
+			dm, t,
+			node,
 			ospfAdjObj["neighbor_id"].(string),
 			ospfAdjObj["neighbor_ip"].(string),
 			ospfAdjObj["instance_id"].(string),
 			ospfAdjObj["interface"].(string),
 			ospfAdjObj["area_id"].(string),
-		))
-
-		dm.Mutex.Lock()
-		dm.Metrics = append(dm.Metrics, m)
-		dm.Mutex.Unlock()
+		)
 
 	}
 

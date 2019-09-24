@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
@@ -144,10 +143,10 @@ func instrumentQoSStats(fields []*telemetry.TelemetryField, ifName string, node 
 		switch f.GetName() {
 
 		case yangQoSDirection:
-			direction = f.GetStringValue()
+			direction = extractGPBKVNativeTypeFromOneof(f, false).(string)
 
 		case yangQoSPolicyName:
-			policyName = f.GetStringValue()
+			policyName = extractGPBKVNativeTypeFromOneof(f, false).(string)
 
 		case yangQoSDiffservClassifierEntries:
 
@@ -158,10 +157,10 @@ func instrumentQoSStats(fields []*telemetry.TelemetryField, ifName string, node 
 
 				switch classMeta.GetName() {
 				case yangQoSClassMapName:
-					classMapName = classMeta.GetStringValue()
+					classMapName = extractGPBKVNativeTypeFromOneof(classMeta, false).(string)
 
 				case yangQoSClassMapParentPath:
-					parentPathRawString := classMeta.GetStringValue()
+					parentPathRawString := extractGPBKVNativeTypeFromOneof(classMeta, false).(string)
 					parentPathSplit := strings.Split(parentPathRawString, " ")
 					parentPath = parentPathSplit[len(parentPathSplit)-2]
 
@@ -172,27 +171,21 @@ func instrumentQoSStats(fields []*telemetry.TelemetryField, ifName string, node 
 						switch classifierStat.GetName() {
 
 						case yangQoSClassifiedBytes:
-							val := classifierStat.GetUint64Value()
+							val := extractGPBKVNativeTypeFromOneof(classifierStat, true)
 
-							metricMutex := &sync.Mutex{}
-							m := DeviceUnaryMetric{Mutex: metricMutex}
+							CreatePromMetric(
+								val,
+								ifStatsQoSClassMapClassifiedBytes,
+								prometheus.CounterValue,
+								dm, t,
+								node,
+								ifName,
+								direction,
+								policyName,
+								classMapName,
+								parentPath,
+							)
 
-							m.Metric = prometheus.NewMetricWithTimestamp(t,
-								prometheus.MustNewConstMetric(
-									ifStatsQoSClassMapClassifiedBytes,
-									prometheus.CounterValue,
-									float64(val),
-									node,
-									ifName,
-									direction,
-									policyName,
-									classMapName,
-									parentPath,
-								))
-
-							dm.Mutex.Lock()
-							dm.Metrics = append(dm.Metrics, m)
-							dm.Mutex.Unlock()
 						}
 					}
 
@@ -203,70 +196,55 @@ func instrumentQoSStats(fields []*telemetry.TelemetryField, ifName string, node 
 						switch queueStat.GetName() {
 
 						case yangQoSClassifierQueueOutputBytes:
-							val := queueStat.GetUint64Value()
 
-							metricMutex := &sync.Mutex{}
-							m := DeviceUnaryMetric{Mutex: metricMutex}
+							val := extractGPBKVNativeTypeFromOneof(queueStat, true)
 
-							m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							CreatePromMetric(
+								val,
 								ifStatsQoSClassMapQueueOutputBytes,
 								prometheus.CounterValue,
-								float64(val),
+								dm, t,
 								node,
 								ifName,
 								direction,
 								policyName,
 								classMapName,
 								parentPath,
-							))
-
-							dm.Mutex.Lock()
-							dm.Metrics = append(dm.Metrics, m)
-							dm.Mutex.Unlock()
+							)
 
 						case yangQoSClassifierQueueBufferedBytes:
-							val := queueStat.GetUint64Value()
 
-							metricMutex := &sync.Mutex{}
-							m := DeviceUnaryMetric{Mutex: metricMutex}
+							val := extractGPBKVNativeTypeFromOneof(queueStat, true)
 
-							m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							CreatePromMetric(
+								val,
 								ifStatsQoSClassMapQueueSizeBytes,
 								prometheus.CounterValue,
-								float64(val),
+								dm, t,
 								node,
 								ifName,
 								direction,
 								policyName,
 								classMapName,
 								parentPath,
-							))
-
-							dm.Mutex.Lock()
-							dm.Metrics = append(dm.Metrics, m)
-							dm.Mutex.Unlock()
+							)
 
 						case yangQoSClassifierQueueDroppedBytes:
-							val := queueStat.GetUint64Value()
 
-							metricMutex := &sync.Mutex{}
-							m := DeviceUnaryMetric{Mutex: metricMutex}
+							val := extractGPBKVNativeTypeFromOneof(queueStat, true)
 
-							m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+							CreatePromMetric(
+								val,
 								ifStatsQoSClassMapQueueDropBytes,
 								prometheus.CounterValue,
-								float64(val),
+								dm, t,
 								node,
 								ifName,
 								direction,
 								policyName,
 								classMapName,
 								parentPath,
-							))
-
-							dm.Mutex.Lock()
-							dm.Metrics = append(dm.Metrics, m)
-							dm.Mutex.Unlock()
+							)
 
 						}
 					}

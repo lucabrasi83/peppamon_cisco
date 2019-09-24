@@ -32,11 +32,11 @@ const (
 	yangCPUProcBusy5Min = "five-minutes"
 )
 
-func parseCPUProcMeta(fields []*telemetry.TelemetryField, node string) map[string]interface{} {
+func parseCPUProcMeta(fields []*telemetry.TelemetryField, node string, t time.Time) map[string]interface{} {
 
 	ProcCPUObj := make(map[string]interface{})
 
-	timestamps := time.Now().Unix()
+	timestamps := t.Unix()
 
 	for _, field := range fields {
 
@@ -45,22 +45,22 @@ func parseCPUProcMeta(fields []*telemetry.TelemetryField, node string) map[strin
 		case yangCPUProcPID:
 			ProcCPUObj["node_id"] = node
 			ProcCPUObj["timestamps"] = timestamps
-			ProcCPUObj["pid"] = field.GetUint32Value()
+			ProcCPUObj["pid"] = extractGPBKVNativeTypeFromOneof(field, true)
 
 		case yangCPUProcName:
-			ProcCPUObj["proc_name"] = field.GetStringValue()
+			ProcCPUObj["proc_name"] = extractGPBKVNativeTypeFromOneof(field, false)
 
 		case yangCPUProcAvgRunTime:
-			ProcCPUObj["proc_avg_runtime"] = field.GetUint64Value()
+			ProcCPUObj["proc_avg_runtime"] = extractGPBKVNativeTypeFromOneof(field, true)
 
 		case yangCPUProcBusy5Sec:
-			ProcCPUObj["cpu_proc_busy_avg_5_sec"] = field.GetDoubleValue()
+			ProcCPUObj["cpu_proc_busy_avg_5_sec"] = extractGPBKVNativeTypeFromOneof(field, true)
 
 		case yangCPUProcBusy1Min:
-			ProcCPUObj["cpu_proc_busy_avg_1_min"] = field.GetDoubleValue()
+			ProcCPUObj["cpu_proc_busy_avg_1_min"] = extractGPBKVNativeTypeFromOneof(field, true)
 
 		case yangCPUProcBusy5Min:
-			ProcCPUObj["cpu_proc_busy_avg_5_min"] = field.GetDoubleValue()
+			ProcCPUObj["cpu_proc_busy_avg_5_min"] = extractGPBKVNativeTypeFromOneof(field, true)
 		}
 
 	}

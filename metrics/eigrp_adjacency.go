@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
@@ -42,7 +41,7 @@ func init() {
 	})
 }
 
-func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	for _, p := range msg.DataGpbkv {
 
@@ -51,41 +50,34 @@ func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time
 		for _, e := range p.Fields[0].Fields {
 			switch e.GetName() {
 			case yangEigrpInstanceAfi:
-				eigrpAdjObj["afi"] = e.GetStringValue()
+				eigrpAdjObj["afi"] = extractGPBKVNativeTypeFromOneof(e, false)
 
 			case yangEigrpInstanceVrf:
-				eigrpAdjObj["vrf"] = e.GetStringValue()
+				eigrpAdjObj["vrf"] = extractGPBKVNativeTypeFromOneof(e, false)
 
 				if eigrpAdjObj["vrf"] == "" {
 					eigrpAdjObj["vrf"] = "Global"
 				}
 			case yangEigrpAdjInterface:
-				eigrpAdjObj["interface"] = e.GetStringValue()
+				eigrpAdjObj["interface"] = extractGPBKVNativeTypeFromOneof(e, false)
 
 			case yangEigrPAdjNbrIP:
-				eigrpAdjObj["neighbor_id"] = e.GetStringValue()
+				eigrpAdjObj["neighbor_id"] = extractGPBKVNativeTypeFromOneof(e, false)
 
 			}
 		}
 
 		// Instrument EIGRP Adjacency Status
-
-		metricMutex := &sync.Mutex{}
-		m := DeviceUnaryMetric{Mutex: metricMutex}
-
-		m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+		CreatePromMetric(
+			1,
 			eigrpAdjStatus,
 			prometheus.GaugeValue,
-			1,
-			msg.GetNodeIdStr(),
+			dm, t,
+			node,
 			eigrpAdjObj["neighbor_id"].(string),
 			eigrpAdjObj["afi"].(string),
 			eigrpAdjObj["vrf"].(string),
 			eigrpAdjObj["interface"].(string),
-		))
-
-		dm.Mutex.Lock()
-		dm.Metrics = append(dm.Metrics, m)
-		dm.Mutex.Unlock()
+		)
 	}
 }

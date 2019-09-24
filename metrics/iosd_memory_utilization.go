@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
@@ -53,61 +52,43 @@ func init() {
 	})
 }
 
-func ParsePBMsgIOSdMemoryUsage(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func ParsePBMsgIOSdMemoryUsage(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	// Look specifically for Processor memory pool
 	for _, field := range msg.DataGpbkv[0].Fields[1].Fields {
 		switch field.GetName() {
 		case yangIOSdTotalMemory:
-			val := field.GetUint64Value()
+			val := extractGPBKVNativeTypeFromOneof(field, true)
 
-			metricMutex := &sync.Mutex{}
-			m := DeviceUnaryMetric{Mutex: metricMutex}
-
-			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+			CreatePromMetric(
+				val,
 				iosdTotalMemory,
 				prometheus.GaugeValue,
-				float64(val),
-				msg.GetNodeIdStr(),
-			))
-
-			dm.Mutex.Lock()
-			dm.Metrics = append(dm.Metrics, m)
-			dm.Mutex.Unlock()
+				dm, t,
+				node,
+			)
 
 		case yangIOSdUsedMemory:
-			val := field.GetUint64Value()
+			val := extractGPBKVNativeTypeFromOneof(field, true)
 
-			metricMutex := &sync.Mutex{}
-			m := DeviceUnaryMetric{Mutex: metricMutex}
-
-			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+			CreatePromMetric(
+				val,
 				iosdUsedMemory,
 				prometheus.GaugeValue,
-				float64(val),
-				msg.GetNodeIdStr(),
-			))
-
-			dm.Mutex.Lock()
-			dm.Metrics = append(dm.Metrics, m)
-			dm.Mutex.Unlock()
+				dm, t,
+				node,
+			)
 
 		case yangIOSdFreeMemory:
-			val := field.GetUint64Value()
+			val := extractGPBKVNativeTypeFromOneof(field, true)
 
-			metricMutex := &sync.Mutex{}
-			m := DeviceUnaryMetric{Mutex: metricMutex}
-
-			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+			CreatePromMetric(
+				val,
 				iosdFreeMemory,
 				prometheus.GaugeValue,
-				float64(val),
-				msg.GetNodeIdStr(),
-			))
-
-			dm.Mutex.Lock()
-			dm.Metrics = append(dm.Metrics, m)
-			dm.Mutex.Unlock()
+				dm, t,
+				node,
+			)
 		}
 	}
 }

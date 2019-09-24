@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/logging"
@@ -23,7 +22,7 @@ var (
 
 	bgpGlobalMeta = prometheus.NewDesc(
 		"cisco_iosxe_bgp_global_meta",
-		"The number of prefixes received from BGP IPv4 unicast peer",
+		"BGP Local AS number and router-id",
 		[]string{"node", "local_neighbor_id", "local_as"},
 		nil,
 	)
@@ -85,7 +84,7 @@ func init() {
 	})
 }
 
-func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	var BgpIpv4NeighborsSlice []map[string]interface{}
 
@@ -93,25 +92,24 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 
 	// Keep function scope variables of BGP Local Neighbor ID and AS for Prometheus metric
 	var bgpLocalNeighborID string
-	var bgpLocalAS uint32
+	var bgpLocalAS float64
 
 	for _, p := range msg.DataGpbkv {
 
 		BgpIpv4AFIObj := make(map[string]interface{})
 
-		timestamps := time.Now().Unix()
+		timestamps := t.Unix()
 
 		for _, bgpAFIVRF := range p.Fields[0].Fields {
 			switch bgpAFIVRF.GetName() {
 			case yangBgpAddressFamily:
-				BgpIpv4AFIObj["node_id"] = msg.GetNodeIdStr()
+				BgpIpv4AFIObj["node_id"] = node
 				BgpIpv4AFIObj["timestamps"] = timestamps
-				BgpIpv4AFIObj["bgp_address_family_type"] = bgpAFIVRF.GetStringValue()
+				BgpIpv4AFIObj["bgp_address_family_type"] = extractGPBKVNativeTypeFromOneof(bgpAFIVRF, false)
 
 			case yangBgpVRFName:
-
-				BgpIpv4AFIObj["bgp_address_family_vrf"] = strings.Replace(
-					bgpAFIVRF.GetStringValue(), "default", "Global", 1)
+				val := extractGPBKVNativeTypeFromOneof(bgpAFIVRF, false)
+				BgpIpv4AFIObj["bgp_address_family_vrf"] = strings.Replace(val.(string), "default", "Global", 1)
 
 			}
 		}
@@ -120,18 +118,18 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 
 			switch bgpAFIMeta.GetName() {
 			case yangBgpRouterID:
-				BgpIpv4AFIObj["bgp_router_id"] = bgpAFIMeta.GetStringValue()
-				bgpLocalNeighborID = bgpAFIMeta.GetStringValue()
+				BgpIpv4AFIObj["bgp_router_id"] = extractGPBKVNativeTypeFromOneof(bgpAFIMeta, false)
+				bgpLocalNeighborID = extractGPBKVNativeTypeFromOneof(bgpAFIMeta, false).(string)
 
 			case yangBgpLocalASNumber:
-				BgpIpv4AFIObj["bgp_local_as"] = bgpAFIMeta.GetUint32Value()
-				bgpLocalAS = bgpAFIMeta.GetUint32Value()
+				BgpIpv4AFIObj["bgp_local_as"] = extractGPBKVNativeTypeFromOneof(bgpAFIMeta, true)
+				bgpLocalAS = extractGPBKVNativeTypeFromOneof(bgpAFIMeta, true).(float64)
 
 			case yangBgpTotalPrefixes:
-				BgpIpv4AFIObj["bgp_afi_total_prefixes"] = bgpAFIMeta.Fields[0].GetUint64Value()
+				BgpIpv4AFIObj["bgp_afi_total_prefixes"] = extractGPBKVNativeTypeFromOneof(bgpAFIMeta.Fields[0], true)
 
 			case yangBgpTotalPaths:
-				BgpIpv4AFIObj["bgp_afi_total_paths"] = bgpAFIMeta.Fields[0].GetUint64Value()
+				BgpIpv4AFIObj["bgp_afi_total_paths"] = extractGPBKVNativeTypeFromOneof(bgpAFIMeta.Fields[0], true)
 
 			case yangBgpNeighborSummary:
 
@@ -142,21 +140,22 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 
 					switch bgpNei.GetName() {
 					case yangBGPNeighborID:
-						BgpIpv4NeighborObj["node_id"] = msg.GetNodeIdStr()
+						BgpIpv4NeighborObj["node_id"] = node
 						BgpIpv4NeighborObj["timestamps"] = timestamps
-						BgpIpv4NeighborObj["neighbor_id"] = bgpNei.GetStringValue()
+						BgpIpv4NeighborObj["neighbor_id"] = extractGPBKVNativeTypeFromOneof(bgpNei, false)
 
 					case yangBGPNeighborUpTime:
-						BgpIpv4NeighborObj["neighbor_uptime"] = bgpNei.GetStringValue()
+						BgpIpv4NeighborObj["neighbor_uptime"] = extractGPBKVNativeTypeFromOneof(bgpNei, false)
 
 					case yangBgpNeighborPrefixesReceived:
-						BgpIpv4NeighborObj["neighbor_prefixes_received"] = bgpNei.GetUint64Value()
+						BgpIpv4NeighborObj["neighbor_prefixes_received"] = extractGPBKVNativeTypeFromOneof(bgpNei, true)
 
 					case yangBGPNeighborRemoteASNumber:
-						BgpIpv4NeighborObj["neighbor_remote_as"] = bgpNei.GetUint32Value()
+						BgpIpv4NeighborObj["neighbor_remote_as"] = extractGPBKVNativeTypeFromOneof(bgpNei, true)
 
 					case yangBGPNeighborStatus:
-						BgpIpv4NeighborObj["neighbor_status"] = mapBgpNeighborFSMToInteger(bgpNei.GetStringValue())
+						val := extractGPBKVNativeTypeFromOneof(bgpNei, false)
+						BgpIpv4NeighborObj["neighbor_status"] = mapBgpNeighborFSMToInteger(val.(string))
 					}
 					BgpIpv4NeighborObj["address_family_type"] = BgpIpv4AFIObj["bgp_address_family_type"]
 					BgpIpv4NeighborObj["address_family_vrf"] = BgpIpv4AFIObj["bgp_address_family_vrf"]
@@ -165,44 +164,31 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 				if neighborID, ok := BgpIpv4NeighborObj["neighbor_id"]; ok {
 
 					// Instrument BGP Prefixes Received per neighbor
-
-					metricMutex := &sync.Mutex{}
-					m := DeviceUnaryMetric{Mutex: metricMutex}
-
-					m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+					CreatePromMetric(
+						BgpIpv4NeighborObj["neighbor_prefixes_received"],
 						bgpIpv4NeighborPrefixesRcvd,
 						prometheus.GaugeValue,
-						float64(BgpIpv4NeighborObj["neighbor_prefixes_received"].(uint64)),
-						msg.GetNodeIdStr(),
+						dm, t,
+						node,
 						neighborID.(string),
 						BgpIpv4NeighborObj["address_family_type"].(string),
 						BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
-					))
-
-					dm.Mutex.Lock()
-					dm.Metrics = append(dm.Metrics, m)
-					dm.Mutex.Unlock()
-
-					// Instrument BGP peer status
-					metricMutexPeer := &sync.Mutex{}
-					mPeer := DeviceUnaryMetric{Mutex: metricMutexPeer}
+					)
 
 					// Convert the Peer Status to float64
 					peerStatusToFloat, _ := strconv.ParseFloat(BgpIpv4NeighborObj["neighbor_status"].(string), 64)
 
-					mPeer.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+					// Instrument BGP peer status
+					CreatePromMetric(
+						peerStatusToFloat,
 						bgpIpv4PeerStatus,
 						prometheus.GaugeValue,
-						peerStatusToFloat,
-						msg.GetNodeIdStr(),
+						dm, t,
+						node,
 						neighborID.(string),
 						BgpIpv4NeighborObj["address_family_type"].(string),
 						BgpIpv4AFIObj["bgp_address_family_vrf"].(string),
-					))
-
-					dm.Mutex.Lock()
-					dm.Metrics = append(dm.Metrics, mPeer)
-					dm.Mutex.Unlock()
+					)
 
 					BgpIpv4NeighborsSlice = append(BgpIpv4NeighborsSlice, BgpIpv4NeighborObj)
 				}
@@ -213,43 +199,38 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 		BgpIpv4AFISlice = append(BgpIpv4AFISlice, BgpIpv4AFIObj)
 	}
 
-	metricMutex := &sync.Mutex{}
-	m := DeviceUnaryMetric{Mutex: metricMutex}
-
-	m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+	// Create BGP local AS and neighbor ID as metric
+	CreatePromMetric(
+		float64(1),
 		bgpGlobalMeta,
 		prometheus.GaugeValue,
-		1,
-		msg.GetNodeIdStr(),
+		dm, t,
+		node,
 		bgpLocalNeighborID,
 		strconv.Itoa(int(bgpLocalAS)),
-	))
-
-	dm.Mutex.Lock()
-	dm.Metrics = append(dm.Metrics, m)
-	dm.Mutex.Unlock()
+	)
 
 	// Handle BGP Peers Metadata persistence in separate Go Routine
 	go func() {
-		err := metadb.DBInstance.PersistsBgpPeersMetadata(BgpIpv4NeighborsSlice, msg.GetNodeIdStr())
+		err := metadb.DBInstance.PersistsBgpPeersMetadata(BgpIpv4NeighborsSlice, node)
 
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
 				fmt.Sprintf(
-					"Failed to insert BGP Peers metadata for node %v : %v", msg.GetNodeIdStr(), err))
+					"Failed to insert BGP Peers metadata for node %v : %v", node, err))
 		}
 	}()
 
 	// Handle BGP AFI Metadata persistence in separate Go Routine
 	go func() {
-		err := metadb.DBInstance.PersistsBgpAfiMetadata(BgpIpv4AFISlice, msg.GetNodeIdStr())
+		err := metadb.DBInstance.PersistsBgpAfiMetadata(BgpIpv4AFISlice, node)
 
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
 				fmt.Sprintf(
-					"Failed to insert BGP AFI metadata for node %v : %v", msg.GetNodeIdStr(), err))
+					"Failed to insert BGP AFI metadata for node %v : %v", node, err))
 		}
 	}()
 

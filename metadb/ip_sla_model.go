@@ -8,11 +8,11 @@ import (
 	"github.com/lucabrasi83/peppamon_cisco/logging"
 )
 
-func (p *peppamonMetaDB) PersistsIPSlaConfigMetadata(ipSlaMeta []map[string]interface{}, node string) error {
+func (p *peppamonMetaDB) PersistsIPSlaConfigMetadata(ipSLAMeta []map[string]interface{}, node string) error {
 
 	// Sanitize Data First
 	// Ensure Telemetry data from device and DB are in sync
-	errSanitize := p.sanitizeIPSLa(ipSlaMeta, node)
+	errSanitize := p.sanitizeIPSLA(ipSLAMeta, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
 			fmt.Sprintf("Failed to sanitize ip_sla_config_meta for node %v : %v", node, errSanitize))
@@ -54,7 +54,7 @@ func (p *peppamonMetaDB) PersistsIPSlaConfigMetadata(ipSlaMeta []map[string]inte
 
 	b := &pgx.Batch{}
 
-	for _, cp := range ipSlaMeta {
+	for _, cp := range ipSLAMeta {
 
 		b.Queue(sqlQuery,
 
@@ -104,9 +104,9 @@ func (p *peppamonMetaDB) PersistsIPSlaConfigMetadata(ipSlaMeta []map[string]inte
 	return nil
 }
 
-func (p *peppamonMetaDB) fetchAllIPSla(node string) ([]int, error) {
+func (p *peppamonMetaDB) fetchAllIPSLA(node string) ([]int, error) {
 
-	var ipSlaSlice []int
+	var ipSLASlice []int
 
 	// Set Query timeout
 	ctxTimeout, cancelQuery := context.WithTimeout(context.Background(), shortQueryTimeout)
@@ -128,25 +128,25 @@ func (p *peppamonMetaDB) fetchAllIPSla(node string) ([]int, error) {
 
 	for rows.Next() {
 
-		var ipSlaEntry int
+		var ipSLAEntry int
 
-		err = rows.Scan(&ipSlaEntry)
+		err = rows.Scan(&ipSLAEntry)
 
 		if err != nil {
 			return nil, err
 		}
-		ipSlaSlice = append(ipSlaSlice, ipSlaEntry)
+		ipSLASlice = append(ipSLASlice, ipSLAEntry)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
 
-	return ipSlaSlice, nil
+	return ipSLASlice, nil
 
 }
 
-func (p *peppamonMetaDB) deleteIPSla(dev string, ipSlaEntry int) error {
+func (p *peppamonMetaDB) deleteIPSLA(dev string, ipSLAEntry int) error {
 	ctxTimeout, cancelQuery := context.WithTimeout(context.Background(), shortQueryTimeout)
 
 	const sqlQuery = `DELETE FROM ip_sla_config_meta
@@ -156,7 +156,7 @@ func (p *peppamonMetaDB) deleteIPSla(dev string, ipSlaEntry int) error {
 
 	defer cancelQuery()
 
-	cTag, err := p.db.Exec(ctxTimeout, sqlQuery, dev, ipSlaEntry)
+	cTag, err := p.db.Exec(ctxTimeout, sqlQuery, dev, ipSLAEntry)
 
 	if err != nil {
 
@@ -165,39 +165,39 @@ func (p *peppamonMetaDB) deleteIPSla(dev string, ipSlaEntry int) error {
 
 	if cTag.RowsAffected() == 0 {
 
-		return fmt.Errorf("failed to sanitize IP SLA %v on device %v", ipSlaEntry, dev)
+		return fmt.Errorf("failed to sanitize IP SLA %v on device %v", ipSLAEntry, dev)
 	}
 
 	return nil
 }
 
-func (p *peppamonMetaDB) sanitizeIPSLa(devIPSla []map[string]interface{}, node string) error {
+func (p *peppamonMetaDB) sanitizeIPSLA(devIPSLA []map[string]interface{}, node string) error {
 
-	allDBIPSla, err := p.fetchAllIPSla(node)
+	allDBIPSLA, err := p.fetchAllIPSLA(node)
 
 	if err != nil {
 		return err
 	}
 
-	var foundIPSlaIndex []int
+	var foundIPSLAIndex []int
 
 	// Loop through DB Device Interfaces and add their indexes for those found
-	for _, deviceIPSla := range devIPSla {
-		for idx, dbIPSla := range allDBIPSla {
+	for _, deviceIPSLA := range devIPSLA {
+		for idx, dbIPSLA := range allDBIPSLA {
 
 			// If we found a match, continue to next iteration
-			if deviceIPSla["sla_number"] == dbIPSla {
+			if deviceIPSLA["sla_number"] == dbIPSLA {
 
-				foundIPSlaIndex = append(foundIPSlaIndex, idx)
+				foundIPSLAIndex = append(foundIPSLAIndex, idx)
 			}
 		}
 	}
 
 	// Delete IP SLA from DB not part of the device anymore
-	for idx, dbIPSLA := range allDBIPSla {
+	for idx, dbIPSLA := range allDBIPSLA {
 
-		if !binarySearchSanitizeDB(foundIPSlaIndex, idx) {
-			err := p.deleteIPSla(node, dbIPSLA)
+		if !binarySearchSanitizeDB(foundIPSLAIndex, idx) {
+			err := p.deleteIPSLA(node, dbIPSLA)
 
 			if err != nil {
 				return err

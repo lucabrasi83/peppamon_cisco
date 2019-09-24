@@ -1,9 +1,11 @@
 package metrics
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/lucabrasi83/peppamon_cisco/logging"
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -38,7 +40,7 @@ type DeviceGroupedMetrics struct {
 // CiscoTelemetryMetric represents a Cisco IOS-XE telemetry metric sent in protocol buffer format
 type CiscoTelemetryMetric struct {
 	EncodingPath     string
-	RecordMetricFunc func(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time)
+	RecordMetricFunc func(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string)
 }
 
 // NewCollector will create a new instance of a Peppamon Collector
@@ -93,4 +95,66 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- metric
 	}
 
+}
+
+// CreatePromMetric will create on the fly the Prometheus metric
+func CreatePromMetric(
+	val interface{},
+	desc *prometheus.Desc,
+	mt prometheus.ValueType,
+	dm *DeviceGroupedMetrics,
+	t time.Time,
+	labels ...string) {
+
+	if v, ok := val.(float64); !ok {
+		logging.PeppaMonLog("error",
+			fmt.Sprintf("Metric %v value %v not float64. Skipping it.", *desc, v))
+		return
+	}
+
+	metricMutex := &sync.Mutex{}
+	m := DeviceUnaryMetric{Mutex: metricMutex}
+
+	m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+		desc,
+		mt,
+		val.(float64),
+		labels...,
+	))
+	dm.Mutex.Lock()
+	dm.Metrics = append(dm.Metrics, m)
+	dm.Mutex.Unlock()
+}
+
+// Support function to extract the value field from K/V Field.
+func extractGPBKVNativeTypeFromOneof(field *telemetry.TelemetryField, num bool) interface{} {
+
+	switch field.ValueByType.(type) {
+	case *telemetry.TelemetryField_BytesValue:
+		if !num {
+			return field.GetBytesValue()
+		}
+	case *telemetry.TelemetryField_StringValue:
+		if !num {
+			return field.GetStringValue()
+		}
+	case *telemetry.TelemetryField_BoolValue:
+		if !num {
+			return field.GetBoolValue()
+		}
+	case *telemetry.TelemetryField_Uint32Value:
+		return float64(field.GetUint32Value())
+	case *telemetry.TelemetryField_Uint64Value:
+		return float64(field.GetUint64Value())
+	case *telemetry.TelemetryField_Sint32Value:
+		return float64(field.GetSint32Value())
+	case *telemetry.TelemetryField_Sint64Value:
+		return float64(field.GetSint64Value())
+	case *telemetry.TelemetryField_DoubleValue:
+		return field.GetDoubleValue()
+	case *telemetry.TelemetryField_FloatValue:
+		return float64(field.GetFloatValue())
+	}
+
+	return nil
 }

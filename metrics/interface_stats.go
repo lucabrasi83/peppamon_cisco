@@ -3,7 +3,6 @@ package metrics
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/logging"
@@ -248,7 +247,7 @@ func init() {
 	})
 }
 
-func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	//Store Interfaces Metadata in slice
 	ifMetaSlice := make([]map[string]interface{}, 0, len(msg.DataGpbkv))
@@ -256,10 +255,10 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 	// Loop through the interface name keys
 	for _, i := range msg.DataGpbkv {
 
-		interfaceName := i.Fields[0].Fields[0].GetStringValue()
+		interfaceName := extractGPBKVNativeTypeFromOneof(i.Fields[0].Fields[0], false).(string)
 
 		// Extract CPE Hostname
-		nodeName := msg.GetNodeIdStr()
+		nodeName := node
 
 		// Instrument interface metadata
 		ifMeta := recordInterfaceMeta(i.Fields[1].Fields, interfaceName, nodeName, t)
@@ -274,117 +273,81 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 					switch subIfStats.GetName() {
 					case yangIfStatsOctetsOut:
 
-						val := subIfStats.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(subIfStats, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutOctets,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOctetsIn:
 
-						val := subIfStats.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(subIfStats, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInOctets,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInv4Errors:
 
-						val := subIfStats.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(subIfStats, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInErrorPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutv4Errors:
 
-						val := subIfStats.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(subIfStats, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutErrorPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInv4Discards:
 
-						val := subIfStats.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(subIfStats, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInDiscardPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutv4Discards:
 
-						val := subIfStats.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(subIfStats, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutDiscardPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 					}
 				}
 				break
@@ -400,258 +363,181 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 
 					case yangIfStatsOctetsOut:
 
-						val := sts.GetUint32Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutOctets,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOctetsIn:
 
-						val := sts.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInOctets,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfNumFlaps:
 
-						val := sts.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsNumFlaps,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfCRCErrorsIn:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsCRCErrorsIn,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutDiscards:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutDiscardPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInDiscards:
-						val := sts.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInDiscardPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInErrors:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInErrorPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutErrors:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutErrorPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutBroadcastPkts:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutBroadcastPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInBroadcastPkts:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInBroadcastPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutUnicastPkts:
-						val := sts.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutUnicastPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInUnicastPkts:
-						val := sts.GetUint64Value()
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInUnicastPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsOutMulticastPkts:
-						val := sts.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsOutMulticastPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					case yangIfStatsInMulticastPkts:
-						val := sts.GetUint64Value()
+						val := extractGPBKVNativeTypeFromOneof(sts, true)
 
-						metricMutex := &sync.Mutex{}
-						m := DeviceUnaryMetric{Mutex: metricMutex}
-
-						m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+						CreatePromMetric(
+							val,
 							ifStatsInMulticastPkts,
 							prometheus.CounterValue,
-							float64(val),
+							dm, t,
 							nodeName,
 							interfaceName,
-						))
-
-						dm.Mutex.Lock()
-						dm.Metrics = append(dm.Metrics, m)
-						dm.Mutex.Unlock()
+						)
 
 					}
 				}
@@ -670,12 +556,12 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 	// Persist Interface Metadata in Meta DB within a separate goroutine
 	go func() {
 
-		err := metadb.DBInstance.PersistsInterfaceMetadata(ifMetaSlice, msg.GetNodeIdStr())
+		err := metadb.DBInstance.PersistsInterfaceMetadata(ifMetaSlice, node)
 
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
-				fmt.Sprintf("failed to insert interface metadata in DB for node %v, error: %v", msg.GetNodeIdStr(),
+				fmt.Sprintf("failed to insert interface metadata in DB for node %v, error: %v", node,
 					err))
 		}
 	}()
@@ -693,46 +579,48 @@ func recordInterfaceMeta(fields []*telemetry.TelemetryField, ifName string, node
 		switch f.GetName() {
 		case IfVRF:
 
-			if f.GetStringValue() == "" {
+			if extractGPBKVNativeTypeFromOneof(f, false).(string) == "" {
 				ifMetaMap["vrf"] = "Global"
 			} else {
-				ifMetaMap["vrf"] = f.GetStringValue()
+				ifMetaMap["vrf"] = extractGPBKVNativeTypeFromOneof(f, false)
 			}
 
 		case IfDescription:
 
-			if f.GetStringValue() == "" {
+			if extractGPBKVNativeTypeFromOneof(f, false).(string) == "" {
 				ifMetaMap["description"] = "No description"
 			} else {
 
-				ifMetaMap["description"] = f.GetStringValue()
+				ifMetaMap["description"] = extractGPBKVNativeTypeFromOneof(f, false)
 			}
 
 		case IfIPv4Address:
 
-			ifMetaMap["ipv4_address"] = f.GetStringValue()
+			ifMetaMap["ipv4_address"] = extractGPBKVNativeTypeFromOneof(f, false)
 
 		case IfSpeed:
-			ifMetaMap["speed"] = f.GetUint64Value()
+			ifMetaMap["speed"] = extractGPBKVNativeTypeFromOneof(f, true)
 
 		case IfIPv4Mask:
 
-			ifMetaMap["ipv4_subnet_mask"] = f.GetStringValue()
+			ifMetaMap["ipv4_subnet_mask"] = extractGPBKVNativeTypeFromOneof(f, false)
 
 		case IfPhysicalAddress:
-			ifMetaMap["physical_address"] = f.GetStringValue()
+			ifMetaMap["physical_address"] = extractGPBKVNativeTypeFromOneof(f, false)
 
 		case IfAdminStatus:
-			ifMetaMap["admin_status"] = mapIfStatusToInteger(f.GetStringValue())
+			val := extractGPBKVNativeTypeFromOneof(f, false)
+			ifMetaMap["admin_status"] = mapIfStatusToInteger(val.(string))
 
 		case IfOperStatus:
-			ifMetaMap["oper_status"] = mapIfStatusToInteger(f.GetStringValue())
+			val := extractGPBKVNativeTypeFromOneof(f, false)
+			ifMetaMap["oper_status"] = mapIfStatusToInteger(val.(string))
 
 		case IfMTU:
-			ifMetaMap["mtu"] = f.GetUint32Value()
+			ifMetaMap["mtu"] = extractGPBKVNativeTypeFromOneof(f, true)
 
 		case IfLastChange:
-			ifMetaMap["last_change"] = f.GetStringValue()
+			ifMetaMap["last_change"] = extractGPBKVNativeTypeFromOneof(f, false)
 		}
 
 		// Avoid Panic when converting IPv4 string to net.IPNet object

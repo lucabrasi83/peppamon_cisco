@@ -147,7 +147,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 	var clientIPSocket string
 	var telemetrySource metrics.Source
 
-	// Extract gRPC client IP for logging purpose
+	// Extract gRPC client socket
 	clientIPNet, ok := peer.FromContext(stream.Context())
 
 	if ok {
@@ -161,6 +161,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 	// Make sure we only the Telemetry subscription once to avoid flooding stdout
 	logFlag := false
 
+	// Start Telemetry gRPC stream receive
 	for {
 		req, err := stream.Recv()
 
@@ -174,7 +175,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 				"error",
 				fmt.Sprintf("Error while reading client %v stream: %v", clientIPSocket, err))
 
-			// Removing Metrics from cache
+			// Removing Metrics from cache if client disconnected
 			s.exp.Mutex.Lock()
 			if _, ok := s.exp.Metrics[telemetrySource]; ok {
 
@@ -243,11 +244,14 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		timestamp := msg.GetMsgTimestamp()
 		promTimestamp := time.Unix(int64(timestamp)/1000, 0)
 
+		// Get Node ID from Telemetry Message
+		node := msg.GetNodeIdStr()
+
 		for _, m := range metrics.CiscoMetricRegistrar {
 			if msg.EncodingPath == m.EncodingPath {
 
 				yangPathSupported = true
-				go m.RecordMetricFunc(msg, deviceMetrics, promTimestamp.UTC())
+				go m.RecordMetricFunc(msg, deviceMetrics, promTimestamp.UTC(), node)
 			}
 		}
 

@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"sync"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
@@ -55,7 +54,7 @@ func init() {
 	})
 }
 
-func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
 	var ProcCPUSlice []map[string]interface{}
 
@@ -65,64 +64,47 @@ func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 
 		case yangCPUPBFiveSecFieldName:
 
-			val := cBusyInterval.GetUint32Value()
+			val := extractGPBKVNativeTypeFromOneof(cBusyInterval, true)
 
-			metricMutex := &sync.Mutex{}
-			m := DeviceUnaryMetric{Mutex: metricMutex}
-
-			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+			CreatePromMetric(
+				val,
 				cpu5Sec,
 				prometheus.GaugeValue,
-				float64(val),
-				msg.GetNodeIdStr(),
-			))
-
-			dm.Mutex.Lock()
-			dm.Metrics = append(dm.Metrics, m)
-			dm.Mutex.Unlock()
+				dm, t,
+				node,
+			)
 
 		case yangCPUPBOneMinFieldName:
 
-			val := cBusyInterval.GetUint32Value()
+			val := extractGPBKVNativeTypeFromOneof(cBusyInterval, true)
 
-			metricMutex := &sync.Mutex{}
-			m := DeviceUnaryMetric{Mutex: metricMutex}
-
-			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+			CreatePromMetric(
+				val,
 				cpu1Min,
 				prometheus.GaugeValue,
-				float64(val),
-				msg.GetNodeIdStr(),
-			))
-
-			dm.Mutex.Lock()
-			dm.Metrics = append(dm.Metrics, m)
-			dm.Mutex.Unlock()
+				dm, t,
+				node,
+			)
 
 		case yangCPUPBFiveMinFieldName:
 
-			val := cBusyInterval.GetUint32Value()
+			val := extractGPBKVNativeTypeFromOneof(cBusyInterval, true)
 
-			metricMutex := &sync.Mutex{}
-			m := DeviceUnaryMetric{Mutex: metricMutex}
-
-			m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
+			CreatePromMetric(
+				val,
 				cpu5Min,
 				prometheus.GaugeValue,
-				float64(val),
-				msg.GetNodeIdStr(),
-			))
-
-			dm.Mutex.Lock()
-			dm.Metrics = append(dm.Metrics, m)
-			dm.Mutex.Unlock()
+				dm, t,
+				node,
+			)
 
 		case yangCPUUsageProcesses:
 
 			// Store the CPU Processes attributes in Struct
 			procObj := parseCPUProcMeta(
 				cBusyInterval.Fields,
-				msg.GetNodeIdStr(),
+				node,
+				t,
 			)
 
 			// Add the CPU Process attributes slice to send for SQL Batch Job
@@ -131,5 +113,5 @@ func ParsePBMsgCPUBusyPercent(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 
 	}
 	// Insert CPU Processes Usage Metadata in Batch SQL query
-	go recordCPUProcMeta(ProcCPUSlice, msg.GetNodeIdStr())
+	go recordCPUProcMeta(ProcCPUSlice, node)
 }

@@ -13,75 +13,75 @@ import (
 const (
 	// The YANG Schema path we're accepting stream
 	// https://github.com/YangModels/yang/blob/master/vendor/cisco/xe/16111/Cisco-IOS-XE-sla.yang
-	IpSlaConfigYANGEncodingPath = "Cisco-IOS-XE-native:native/ip/Cisco-IOS-XE-sla:sla/entry"
+	IPSLAConfigYANGEncodingPath = "Cisco-IOS-XE-native:native/ip/Cisco-IOS-XE-sla:sla/entry"
 
 	// IP SLA Entry ID
-	yangIpSlaConfigID = "number"
+	yangIPSLAConfigID = "number"
 
 	// IP SLA Destination IP (ICMP Echo)
-	yangIpSlaConfigDestination = "destination"
+	yangIPSLAConfigDestination = "destination"
 
 	// IP SLA Destination IP (UDP Jitter)
-	yangIpSlaConfigDestAddr = "dest-addr"
+	yangIPSLAConfigDestAddr = "dest-addr"
 
 	// IP SLA Destination Port
-	yangIpSlaConfigDestPort = "portno"
+	yangIPSLAConfigDestPort = "portno"
 
 	// IP SLA Source IP (UDP Jitter)
-	yangIpSlaConfigSourceIP = "source-ip"
+	yangIPSLAConfigSourceIP = "source-ip"
 
 	// IP SLA Source Port (UDP Jitter)
-	yangIpSlaConfigSourcePort = "source-port"
+	yangIPSLAConfigSourcePort = "source-port"
 
 	// IP SLA Type Of Service
-	yangIpSlaConfigTOS = "tos"
+	yangIPSLAConfigTOS = "tos"
 
 	// IP SLA Probe Frequency
-	yangIpSlaConfigProbeFrequency = "frequency"
+	yangIPSLAConfigProbeFrequency = "frequency"
 
 	// IP SLA Probe Request Size
-	yangIpSlaConfigProbeReqSize = "request-data-size"
+	yangIPSLAConfigProbeReqSize = "request-data-size"
 
 	// IP SLA Tag
-	yangIpSlaConfigTag = "tag"
+	yangIPSLAConfigTag = "tag"
 
 	// IP SLA HTTP GET
-	yangIpSlaConfigHTTPGet = "get"
+	yangIPSLAConfigHTTPGet = "get"
 
 	// IP SLA HTTP Version
-	yangIpSlaConfigVRF = "vrf"
+	yangIPSLAConfigVRF = "vrf"
 
 	// IP SLA HTTP RAW
-	yangIpSlaConfigHTTPRaw = "raw"
+	yangIPSLAConfigHTTPRaw = "raw"
 
 	// IP SLA HTTP URL
-	yangIpSlaConfigHTTPUrl = "url"
+	yangIPSLAConfigHTTPUrl = "url"
 
 	// IP SLA HTTP NS
-	yangIpSlaConfigHTTPNS = "name-server"
+	yangIPSLAConfigHTTPNS = "name-server"
 
 	// IP SLA HTTP Version
-	yangIpSlaConfigHTTPVersion = "version"
+	yangIPSLAConfigHTTPVersion = "version"
 
 	// IP SLA HTTP Version
-	yangIpSlaConfigHTTPProxy = "proxy"
+	yangIPSLAConfigHTTPProxy = "proxy"
 )
 
 func init() {
 	CiscoMetricRegistrar = append(CiscoMetricRegistrar, CiscoTelemetryMetric{
-		EncodingPath:     IpSlaConfigYANGEncodingPath,
+		EncodingPath:     IPSLAConfigYANGEncodingPath,
 		RecordMetricFunc: parseIPSlaConfigPB,
 	})
 }
 
-func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time) {
+func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
-	IPSlaConfigSlice := make([]map[string]interface{}, 0, len(msg.DataGpbkv))
+	IPSLAConfigSlice := make([]map[string]interface{}, 0, len(msg.DataGpbkv))
 
 	for _, p := range msg.DataGpbkv {
 
-		IPSlaConfig := map[string]interface{}{
-			"node_id":          msg.GetNodeIdStr(),
+		IPSLAConfig := map[string]interface{}{
+			"node_id":          node,
 			"sla_number":       0,
 			"sla_type":         "N/A",
 			"destination_ip":   "N/A",
@@ -101,8 +101,9 @@ func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t ti
 			"timestamps":       t.Unix(),
 		}
 
-		if p.Fields[0].Fields[0].GetName() == yangIpSlaConfigID {
-			IPSlaConfig["sla_number"] = int(p.Fields[0].Fields[0].GetUint32Value())
+		if p.Fields[0].Fields[0].GetName() == yangIPSLAConfigID {
+			val := extractGPBKVNativeTypeFromOneof(p.Fields[0].Fields[0], true)
+			IPSLAConfig["sla_number"] = int(val.(float64))
 		}
 
 		// Ignore IP SLA if not configured with entry type
@@ -110,80 +111,88 @@ func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t ti
 			continue
 		}
 
-		IPSlaConfig["sla_type"] = p.Fields[1].Fields[0].GetName()
+		IPSLAConfig["sla_type"] = p.Fields[1].Fields[0].GetName()
 
 		for _, slaField := range p.Fields[1].Fields[0].Fields {
 
 			switch slaField.GetName() {
 
-			case yangIpSlaConfigDestination:
-				IPSlaConfig["destination_ip"] = slaField.GetStringValue()
-			case yangIpSlaConfigDestAddr:
-				IPSlaConfig["destination_ip"] = slaField.GetStringValue()
-			case yangIpSlaConfigDestPort:
-				IPSlaConfig["destination_port"] = int(slaField.GetUint32Value())
-			case yangIpSlaConfigSourcePort:
-				IPSlaConfig["source_port"] = int(slaField.GetUint32Value())
-			case yangIpSlaConfigSourceIP:
-				IPSlaConfig["source_ip"] = slaField.GetStringValue()
-			case yangIpSlaConfigTOS:
-				IPSlaConfig["dscp"] = convTOStoDSCP(int(slaField.GetUint32Value()))
-			case yangIpSlaConfigProbeFrequency:
-				IPSlaConfig["frequency"] = int(slaField.GetUint32Value())
-			case yangIpSlaConfigProbeReqSize:
-				IPSlaConfig["req_data_size"] = int(slaField.GetUint32Value())
-			case yangIpSlaConfigTag:
-				cos, dstHost := convIPSlaTagToDesc(slaField.GetStringValue())
-				IPSlaConfig["class_of_service"], IPSlaConfig["destination_host"] = cos, dstHost
-			case yangIpSlaConfigVRF:
-				IPSlaConfig["vrf"] = slaField.GetStringValue()
+			case yangIPSLAConfigDestination:
+				IPSLAConfig["destination_ip"] = extractGPBKVNativeTypeFromOneof(slaField, false)
+			case yangIPSLAConfigDestAddr:
+				IPSLAConfig["destination_ip"] = extractGPBKVNativeTypeFromOneof(slaField, false)
+			case yangIPSLAConfigDestPort:
+				val := extractGPBKVNativeTypeFromOneof(slaField, true)
+				IPSLAConfig["destination_port"] = int(val.(float64))
+			case yangIPSLAConfigSourcePort:
+				val := extractGPBKVNativeTypeFromOneof(slaField, true)
+				IPSLAConfig["source_port"] = int(val.(float64))
+			case yangIPSLAConfigSourceIP:
+				IPSLAConfig["source_ip"] = extractGPBKVNativeTypeFromOneof(slaField, false)
+			case yangIPSLAConfigTOS:
+				val := extractGPBKVNativeTypeFromOneof(slaField, true)
+				IPSLAConfig["dscp"] = convTOStoDSCP(int(val.(float64)))
+			case yangIPSLAConfigProbeFrequency:
+				val := extractGPBKVNativeTypeFromOneof(slaField, true)
+				IPSLAConfig["frequency"] = int(val.(float64))
+			case yangIPSLAConfigProbeReqSize:
+				val := extractGPBKVNativeTypeFromOneof(slaField, true)
+				IPSLAConfig["req_data_size"] = int(val.(float64))
+			case yangIPSLAConfigTag:
+				val := extractGPBKVNativeTypeFromOneof(slaField, false)
+				cos, dstHost := convIPSlaTagToDesc(val.(string))
+				IPSLAConfig["class_of_service"], IPSLAConfig["destination_host"] = cos, dstHost
+			case yangIPSLAConfigVRF:
+				IPSLAConfig["vrf"] = extractGPBKVNativeTypeFromOneof(slaField, false)
 
 			// Handle Specific fields for HTTP IP SLA
-			case yangIpSlaConfigHTTPGet:
+			case yangIPSLAConfigHTTPGet:
 				for _, slaHTTP := range slaField.Fields {
 					switch slaHTTP.GetName() {
-					case yangIpSlaConfigHTTPUrl:
-						IPSlaConfig["http_url"] = slaHTTP.GetStringValue()
-					case yangIpSlaConfigSourceIP:
-						IPSlaConfig["source_ip"] = slaField.GetStringValue()
-					case yangIpSlaConfigHTTPNS:
-						IPSlaConfig["http_dns_server"] = slaHTTP.GetStringValue()
-					case yangIpSlaConfigHTTPVersion:
-						IPSlaConfig["http_version"] = slaHTTP.GetStringValue()
-					case yangIpSlaConfigSourcePort:
-						IPSlaConfig["source_port"] = int(slaField.GetUint32Value())
-					case yangIpSlaConfigHTTPProxy:
-						IPSlaConfig["http_proxy"] = slaHTTP.GetStringValue()
+					case yangIPSLAConfigHTTPUrl:
+						IPSLAConfig["http_url"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigSourceIP:
+						IPSLAConfig["source_ip"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigHTTPNS:
+						IPSLAConfig["http_dns_server"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigHTTPVersion:
+						IPSLAConfig["http_version"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigSourcePort:
+						val := extractGPBKVNativeTypeFromOneof(slaHTTP, true)
+						IPSLAConfig["source_port"] = int(val.(float64))
+					case yangIPSLAConfigHTTPProxy:
+						IPSLAConfig["http_proxy"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
 					}
 				}
-			case yangIpSlaConfigHTTPRaw:
+			case yangIPSLAConfigHTTPRaw:
 				for _, slaHTTP := range slaField.Fields {
 					switch slaHTTP.GetName() {
-					case yangIpSlaConfigHTTPUrl:
-						IPSlaConfig["http_url"] = slaHTTP.GetStringValue()
-					case yangIpSlaConfigSourceIP:
-						IPSlaConfig["source_ip"] = slaField.GetStringValue()
-					case yangIpSlaConfigHTTPNS:
-						IPSlaConfig["http_dns_server"] = slaHTTP.GetStringValue()
-					case yangIpSlaConfigHTTPVersion:
-						IPSlaConfig["http_version"] = slaHTTP.GetStringValue()
-					case yangIpSlaConfigSourcePort:
-						IPSlaConfig["source_port"] = int(slaField.GetUint32Value())
-					case yangIpSlaConfigHTTPProxy:
-						IPSlaConfig["http_proxy"] = slaHTTP.GetStringValue()
+					case yangIPSLAConfigHTTPUrl:
+						IPSLAConfig["http_url"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigSourceIP:
+						IPSLAConfig["source_ip"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigHTTPNS:
+						IPSLAConfig["http_dns_server"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigHTTPVersion:
+						IPSLAConfig["http_version"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
+					case yangIPSLAConfigSourcePort:
+						val := extractGPBKVNativeTypeFromOneof(slaHTTP, true)
+						IPSLAConfig["source_port"] = int(val.(float64))
+					case yangIPSLAConfigHTTPProxy:
+						IPSLAConfig["http_proxy"] = extractGPBKVNativeTypeFromOneof(slaHTTP, false)
 					}
 				}
 			}
 
 		}
-		IPSlaConfigSlice = append(IPSlaConfigSlice, IPSlaConfig)
+		IPSLAConfigSlice = append(IPSLAConfigSlice, IPSLAConfig)
 	}
 	go func() {
-		err := metadb.DBInstance.PersistsIPSlaConfigMetadata(IPSlaConfigSlice, msg.GetNodeIdStr())
+		err := metadb.DBInstance.PersistsIPSlaConfigMetadata(IPSLAConfigSlice, node)
 
 		if err != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to insert IP SLA Config metadata into DB: %v for Node %v", err, msg.GetNodeIdStr()))
+				fmt.Sprintf("Failed to insert IP SLA Config metadata into DB: %v for Node %v", err, node))
 		}
 
 	}()
