@@ -188,11 +188,13 @@ func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t ti
 		IPSLAConfigSlice = append(IPSLAConfigSlice, IPSLAConfig)
 	}
 	go func() {
-		err := metadb.DBInstance.PersistsIPSlaConfigMetadata(IPSLAConfigSlice, node)
+		if len(IPSLAConfigSlice) > 0 {
+			err := metadb.DBInstance.PersistsIPSlaConfigMetadata(IPSLAConfigSlice, node)
 
-		if err != nil {
-			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to insert IP SLA Config metadata into DB: %v for Node %v", err, node))
+			if err != nil {
+				logging.PeppaMonLog("error",
+					fmt.Sprintf("Failed to insert IP SLA Config metadata into DB: %v for Node %v", err, node))
+			}
 		}
 
 	}()
