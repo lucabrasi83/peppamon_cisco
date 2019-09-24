@@ -212,25 +212,31 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 
 	// Handle BGP Peers Metadata persistence in separate Go Routine
 	go func() {
-		err := metadb.DBInstance.PersistsBgpPeersMetadata(BgpIpv4NeighborsSlice, node)
 
-		if err != nil {
-			logging.PeppaMonLog(
-				"error",
-				fmt.Sprintf(
-					"Failed to insert BGP Peers metadata for node %v : %v", node, err))
+		if len(BgpIpv4NeighborsSlice) > 0 {
+			err := metadb.DBInstance.PersistsBgpPeersMetadata(BgpIpv4NeighborsSlice, node)
+
+			if err != nil {
+				logging.PeppaMonLog(
+					"error",
+					fmt.Sprintf(
+						"Failed to insert BGP Peers metadata for node %v : %v", node, err))
+			}
 		}
 	}()
 
 	// Handle BGP AFI Metadata persistence in separate Go Routine
 	go func() {
-		err := metadb.DBInstance.PersistsBgpAfiMetadata(BgpIpv4AFISlice, node)
 
-		if err != nil {
-			logging.PeppaMonLog(
-				"error",
-				fmt.Sprintf(
-					"Failed to insert BGP AFI metadata for node %v : %v", node, err))
+		if len(BgpIpv4AFISlice) > 0 {
+			err := metadb.DBInstance.PersistsBgpAfiMetadata(BgpIpv4AFISlice, node)
+
+			if err != nil {
+				logging.PeppaMonLog(
+					"error",
+					fmt.Sprintf(
+						"Failed to insert BGP AFI metadata for node %v : %v", node, err))
+			}
 		}
 	}()
 
