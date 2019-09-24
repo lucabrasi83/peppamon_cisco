@@ -73,7 +73,7 @@ func init() {
 
 	// Set Connection Parameters
 	poolConfig.MaxConns = 50
-	poolConfig.HealthCheckPeriod = 5 * time.Second
+	poolConfig.HealthCheckPeriod = 1 * time.Minute
 	poolConfig.ConnConfig.Host = os.Getenv("PEPPAMON_METADB_HOST")
 	poolConfig.ConnConfig.User = os.Getenv("PEPPAMON_METADB_USERNAME")
 	poolConfig.ConnConfig.Password = os.Getenv("PEPPAMON_METADB_PASSWORD")
@@ -87,8 +87,8 @@ func init() {
 
 	poolConfig.ConnConfig.DialFunc =
 		(&net.Dialer{
-			KeepAlive: 10 * time.Second,
-			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			Timeout:   1 * time.Minute,
 		}).DialContext
 
 	ConnPool, err = pgxpool.ConnectConfig(context.Background(), poolConfig)

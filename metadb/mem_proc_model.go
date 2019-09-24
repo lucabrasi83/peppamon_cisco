@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/lucabrasi83/peppamon_cisco/logging"
 )
 
 // PersistsMemProcMetadata will save the processes memory utilization in the Telemetry Meta DB
@@ -47,6 +48,16 @@ func (p *peppamonMetaDB) PersistsMemProcMetadata(memProc []map[string]interface{
 
 	// Send Batch SQL Query
 	r := p.db.SendBatch(ctxTimeout, b)
+
+	// Close Batch at the end of function
+	defer func() {
+		errCloseBatch := r.Close()
+		if errCloseBatch != nil {
+			logging.PeppaMonLog("error",
+				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+		}
+	}()
+
 	c, errSendBatch := r.Exec()
 
 	if errSendBatch != nil {
@@ -55,13 +66,6 @@ func (p *peppamonMetaDB) PersistsMemProcMetadata(memProc []map[string]interface{
 
 	if c.RowsAffected() < 1 {
 		return fmt.Errorf("no insertion of row while executing query %v", sqlQuery)
-	}
-
-	// Execute Batch SQL Query
-	errExecBatch := r.Close()
-	if errExecBatch != nil {
-
-		return errExecBatch
 	}
 
 	return nil
