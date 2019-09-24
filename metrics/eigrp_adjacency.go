@@ -69,7 +69,7 @@ func parseEigrpAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time
 
 		// Instrument EIGRP Adjacency Status
 		CreatePromMetric(
-			1,
+			float64(1),
 			eigrpAdjStatus,
 			prometheus.GaugeValue,
 			dm, t,
