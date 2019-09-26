@@ -97,6 +97,9 @@ const (
 	// IP SLA HTTP DNS RTT
 	yangIPSLAOperHTTPDNSRTT = "dns-rtt"
 
+	// IP SLA HTTP TCP RTT
+	yangIPSLAOperHTTPTCPRTT = "tcp-rtt"
+
 	// IP SLA HTTP Transaction RTT
 	yangIPSLAOperHTTPTransactionRTT = "transaction-rtt"
 
@@ -273,6 +276,13 @@ var (
 		nil,
 	)
 
+	ipSLAProbeHTTPTCPRTT = prometheus.NewDesc(
+		"cisco_iosxe_ip_sla_probe_http_tcp_rtt_msec",
+		"The HTTP IP SLA probe TCP Connection Round Trip Time in milliseconds",
+		[]string{"node", "sla_entry_id", "sla_type"},
+		nil,
+	)
+
 	ipSLAProbeHTTPTransactionError = prometheus.NewDesc(
 		"cisco_iosxe_ip_sla_probe_http_transaction_error",
 		"The HTTP IP SLA probe number of HTTP transaction errors occurred",
@@ -361,7 +371,7 @@ func parseIPSlaMetricsPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 
 				if err != nil {
 					logging.PeppaMonLog("error",
-						fmt.Sprintf("Failed to convert IP SLA Start Time"))
+						fmt.Sprintf("Failed to convert IP SLA Start Time %v error %v", val, err))
 				} else {
 					CreatePromMetric(
 						float64(timeObj.UTC().Unix()),
@@ -636,12 +646,21 @@ func parseIPSlaMetricsPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 												prometheus.GaugeValue,
 												dm, t, node, slaEntryID, slaType)
 
-											// Source to Destination Maximum One Way Latency Stats in YANG Schema
+											// HTTP Transaction RTT
 										case yangIPSLAOperHTTPTransactionRTT:
 											val := extractGPBKVNativeTypeFromOneof(v, true)
 											CreatePromMetric(
 												val,
 												ipSLAProbeHTTPTransactionRTT,
+												prometheus.GaugeValue,
+												dm, t, node, slaEntryID, slaType)
+
+											// HTTP TCP RTT in YANG Schema
+										case yangIPSLAOperHTTPTCPRTT:
+											val := extractGPBKVNativeTypeFromOneof(v, true)
+											CreatePromMetric(
+												val,
+												ipSLAProbeHTTPTCPRTT,
 												prometheus.GaugeValue,
 												dm, t, node, slaEntryID, slaType)
 
