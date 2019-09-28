@@ -222,6 +222,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 			delete(s.exp.Metrics, telemetrySource)
 		}
 
+		// Set the metric cache key to include the Telemetry NodeIF and the YANG encoding path
 		s.exp.Metrics[telemetrySource] = deviceMetrics
 		s.exp.Mutex.Unlock()
 

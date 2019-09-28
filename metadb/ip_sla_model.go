@@ -165,7 +165,7 @@ func (p *peppamonMetaDB) deleteIPSLA(dev string, ipSLAEntry int) error {
 
 	if cTag.RowsAffected() == 0 {
 
-		return fmt.Errorf("failed to sanitize IP SLA %v on device %v", ipSLAEntry, dev)
+		return fmt.Errorf("failed to sanitize IP SLA %v during deletion on device %v", ipSLAEntry, dev)
 	}
 
 	return nil
@@ -181,7 +181,7 @@ func (p *peppamonMetaDB) sanitizeIPSLA(devIPSLA []map[string]interface{}, node s
 
 	var foundIPSLAIndex []int
 
-	// Loop through DB Device Interfaces and add their indexes for those found
+	// Loop through DB IP SLAs and add their indexes for those found
 	for _, deviceIPSLA := range devIPSLA {
 		for idx, dbIPSLA := range allDBIPSLA {
 
