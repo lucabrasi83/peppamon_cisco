@@ -15,7 +15,7 @@ func (p *peppamonMetaDB) PersistsIPSlaConfigMetadata(ipSLAMeta []map[string]inte
 	errSanitize := p.sanitizeIPSLA(ipSLAMeta, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
-			fmt.Sprintf("Failed to sanitize ip_sla_config_meta for node %v : %v", node, errSanitize))
+			"Failed to sanitize ip_sla_config_meta for node %v : %v", node, errSanitize)
 	}
 
 	// Set Query timeout
@@ -87,7 +87,7 @@ func (p *peppamonMetaDB) PersistsIPSlaConfigMetadata(ipSLAMeta []map[string]inte
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job query %s with error %v", sqlQuery, errCloseBatch)
 		}
 	}()
 

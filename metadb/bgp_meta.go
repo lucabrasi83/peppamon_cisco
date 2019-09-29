@@ -34,7 +34,7 @@ func (p *peppamonMetaDB) PersistsBgpAfiMetadata(bgpAfiMeta []map[string]interfac
 	errSanitize := p.sanitizeBgpAFIs(bgpAfiMeta, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
-			fmt.Sprintf("Failed to sanitize bgp_afi_meta for node %v : %v", node, errSanitize))
+			"Failed to sanitize bgp_afi_meta for node %v : %v", node, errSanitize)
 	}
 
 	// Set Query timeout
@@ -77,7 +77,7 @@ func (p *peppamonMetaDB) PersistsBgpAfiMetadata(bgpAfiMeta []map[string]interfac
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job query %s with error %v", sqlQuery, errCloseBatch)
 		}
 	}()
 
@@ -101,7 +101,7 @@ func (p *peppamonMetaDB) PersistsBgpPeersMetadata(bgpPeers []map[string]interfac
 	errSanitize := p.sanitizeBgpPeers(bgpPeers, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
-			fmt.Sprintf("Failed to sanitize bgp_peers_meta for node %v : %v", node, errSanitize))
+			"Failed to sanitize bgp_peers_meta for node %v : %v", node, errSanitize)
 	}
 
 	// Set Query timeout
@@ -147,7 +147,7 @@ func (p *peppamonMetaDB) PersistsBgpPeersMetadata(bgpPeers []map[string]interfac
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job query %s with error %v", sqlQuery, errCloseBatch)
 		}
 	}()
 

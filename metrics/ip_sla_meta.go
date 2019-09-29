@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -193,7 +192,7 @@ func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t ti
 
 			if err != nil {
 				logging.PeppaMonLog("error",
-					fmt.Sprintf("Failed to insert IP SLA Config metadata into DB: %v for Node %v", err, node))
+					"Failed to insert IP SLA Config metadata into DB: %v for Node %v", err, node)
 			}
 		}
 

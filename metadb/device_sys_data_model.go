@@ -50,7 +50,7 @@ func (p *peppamonMetaDB) PersistsDeviceSYSData(devSYSData []map[string]interface
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job with error %v", errCloseBatch)
 		}
 	}()
 

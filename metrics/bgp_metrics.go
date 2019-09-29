@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -219,8 +218,8 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 			if err != nil {
 				logging.PeppaMonLog(
 					"error",
-					fmt.Sprintf(
-						"Failed to insert BGP Peers metadata for node %v : %v", node, err))
+
+					"Failed to insert BGP Peers metadata for node %v : %v", node, err)
 			}
 		}
 	}()
@@ -234,8 +233,8 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 			if err != nil {
 				logging.PeppaMonLog(
 					"error",
-					fmt.Sprintf(
-						"Failed to insert BGP AFI metadata for node %v : %v", node, err))
+
+					"Failed to insert BGP AFI metadata for node %v : %v", node, err)
 			}
 		}
 	}()

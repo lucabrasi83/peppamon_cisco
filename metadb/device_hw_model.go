@@ -22,7 +22,7 @@ func (p *peppamonMetaDB) PersistsDeviceHWInventory(devHWInventory []map[string]i
 	errSanitize := p.sanitizeIPSLA(devHWInventory, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
-			fmt.Sprintf("Failed to sanitize device_hw_info for node %v : %v", node, errSanitize))
+			"Failed to sanitize device_hw_info for node %v : %v", node, errSanitize)
 	}
 
 	// Set Query timeout
@@ -71,7 +71,7 @@ func (p *peppamonMetaDB) PersistsDeviceHWInventory(devHWInventory []map[string]i
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job with error %v", errCloseBatch)
 		}
 	}()
 

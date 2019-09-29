@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/logging"
@@ -74,6 +73,6 @@ func recordCPUProcMeta(p []map[string]interface{}, node string) {
 	if err != nil {
 		logging.PeppaMonLog(
 			"error",
-			fmt.Sprintf("Failed to insert CPU processes metadata for node %v: %v", node, err))
+			"Failed to insert CPU processes metadata for node %v: %v", node, err)
 	}
 }

@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		logging.PeppaMonLog(
 			"fatal",
-			fmt.Sprintf("failed to bind Peppamon Telemetry TCP socket %v", err))
+			"failed to bind Peppamon Telemetry TCP socket %v", err)
 
 	}
 
@@ -67,7 +67,7 @@ func main() {
 
 	logging.PeppaMonLog(
 		"info",
-		fmt.Sprint("Starting Peppamon Telemetry gRPC collector..."))
+		"Starting Peppamon Telemetry gRPC collector...")
 
 	// Channel to handle graceful shutdown of GRPC Server
 	ch := make(chan os.Signal, 1)
@@ -83,7 +83,7 @@ func main() {
 
 			logging.PeppaMonLog(
 				"fatal",
-				fmt.Sprintf("Failed to start Peppamon Telemetry gRPC collector %v", err))
+				"Failed to start Peppamon Telemetry gRPC collector %v", err)
 
 		}
 	}()
@@ -92,7 +92,7 @@ func main() {
 	go func() {
 		logging.PeppaMonLog(
 			"info",
-			fmt.Sprintf("Starting Prometheus HTTP metrics handler..."))
+			"Starting Prometheus HTTP metrics handler...")
 
 		http.Handle("/metrics", promhttp.Handler())
 
@@ -108,14 +108,14 @@ func main() {
 			if errWelcomePage != nil {
 				logging.PeppaMonLog(
 					"error",
-					fmt.Sprintf("Failed to render Welcome page %v", err))
+					"Failed to render Welcome page %v", err)
 			}
 		})
 
 		if err := promHTTPSrv.ListenAndServe(); err != http.ErrServerClosed {
 			logging.PeppaMonLog(
 				"fatal",
-				fmt.Sprintf("Failed to start Prometheus HTTP metrics handler %v", err))
+				"Failed to start Prometheus HTTP metrics handler %v", err)
 		}
 	}()
 
@@ -133,7 +133,7 @@ func main() {
 	if errPromHTTPShut != nil {
 		logging.PeppaMonLog(
 			"warning",
-			fmt.Sprintf("Error while shutting down Prometheus HTTP Server %v", errPromHTTPShut))
+			"Error while shutting down Prometheus HTTP Server %v", errPromHTTPShut)
 	}
 	s.Stop()
 
@@ -156,7 +156,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 
 	logging.PeppaMonLog(
 		"info",
-		fmt.Sprintf("Client Socket %v initiating gRPC Telemetry Stream...", clientIPSocket))
+		"Client Socket %v initiating gRPC Telemetry Stream...", clientIPSocket)
 
 	// Make sure we only the Telemetry subscription once to avoid flooding stdout
 	logFlag := false
@@ -173,7 +173,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
-				fmt.Sprintf("Error while reading client %v stream: %v", clientIPSocket, err))
+				"Error while reading client %v stream: %v", clientIPSocket, err)
 
 			// Removing Metrics from cache if client disconnected
 			s.exp.Mutex.Lock()
@@ -198,7 +198,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
-				fmt.Sprintf("Error while unmarshaling Proto message from client %v : %v", err, clientIPSocket))
+				"Error while unmarshaling Proto message from client %v : %v", err, clientIPSocket)
 
 			return err
 		}
@@ -230,10 +230,8 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		if !logFlag {
 			logging.PeppaMonLog(
 				"info",
-				fmt.Sprintf(
-					"Telemetry Subscription Request Received - Client %v - Node %v - YANG Model Path %v",
-					clientIPSocket, msg.GetNodeIdStr(), msg.GetEncodingPath(),
-				),
+				"Telemetry Subscription Request Received - Client %v - Node %v - YANG Model Path %v",
+				clientIPSocket, msg.GetNodeIdStr(), msg.GetEncodingPath(),
 			)
 		}
 		logFlag = true
@@ -265,9 +263,8 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 
 			logging.PeppaMonLog(
 				"error",
-				fmt.Sprintf(
-					"Received Telemetry message from client %v  (Device Name %v) for unsupported YANG Node Path %v",
-					clientIPSocket, msg.GetNodeIdStr(), msg.GetEncodingPath()))
+				"Received Telemetry message from client %v  (Device Name %v) for unsupported YANG Node Path %v",
+				clientIPSocket, msg.GetNodeIdStr(), msg.GetEncodingPath())
 
 			return status.Errorf(
 				codes.InvalidArgument,

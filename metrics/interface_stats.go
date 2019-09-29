@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -561,8 +560,7 @@ func ParsePBMsgInterfaceStats(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics
 		if err != nil {
 			logging.PeppaMonLog(
 				"error",
-				fmt.Sprintf("failed to insert interface metadata in DB for node %v, error: %v", node,
-					err))
+				"failed to insert interface metadata in DB for node %v, error: %v", node, err)
 		}
 	}()
 }

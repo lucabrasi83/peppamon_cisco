@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/logging"
@@ -83,6 +82,6 @@ func parseMemoryProcMeta(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 	if err != nil {
 		logging.PeppaMonLog(
 			"error",
-			fmt.Sprintf("Failed to insert Memory processes metadata for node %v: %v", node, err))
+			"Failed to insert Memory processes metadata for node %v: %v", node, err)
 	}
 }

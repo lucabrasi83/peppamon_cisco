@@ -54,7 +54,7 @@ func (p *peppamonMetaDB) PersistsMemProcMetadata(memProc []map[string]interface{
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job query %s with error %v", sqlQuery, errCloseBatch)
 		}
 	}()
 

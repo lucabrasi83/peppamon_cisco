@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"regexp"
 	"sync"
 	"time"
@@ -118,7 +117,7 @@ func parseDeviceHardwareMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, 
 			err := metadb.DBInstance.PersistsDeviceHWInventory(hwObjSlice, node)
 			if err != nil {
 				logging.PeppaMonLog("error",
-					fmt.Sprintf("Failed to insert Device Hardware inventory data into DB: %v for Node %v", err, node))
+					"Failed to insert Device Hardware inventory data into DB: %v for Node %v", err, node)
 			}
 		}()
 	}
@@ -128,7 +127,7 @@ func parseDeviceHardwareMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, 
 			err := metadb.DBInstance.PersistsDeviceSYSData(sysObjSlice, node)
 			if err != nil {
 				logging.PeppaMonLog("error",
-					fmt.Sprintf("Failed to insert Device System data into DB: %v for Node %v", err, node))
+					"Failed to insert Device System data into DB: %v for Node %v", err, node)
 			}
 		}()
 	}
@@ -196,7 +195,7 @@ func recursiveHWInfo(m *telemetry.TelemetryField, t time.Time, node string,
 
 					if err != nil {
 						logging.PeppaMonLog("error",
-							fmt.Sprintf("Failed to convert yangHardwareDeviceLastSeenTime %v error %v", val, err))
+							"Failed to convert yangHardwareDeviceLastSeenTime %v error %v", val, err)
 					} else {
 						sysObj[hwField.GetName()] = timeObj.UTC().Unix()
 					}
@@ -207,7 +206,7 @@ func recursiveHWInfo(m *telemetry.TelemetryField, t time.Time, node string,
 
 					if err != nil {
 						logging.PeppaMonLog("error",
-							fmt.Sprintf("Failed to convert yangHardwareDeviceBootTime %v error %v", val, err))
+							"Failed to convert yangHardwareDeviceBootTime %v error %v", val, err)
 					} else {
 						sysObj[hwField.GetName()] = timeObj.UTC().Unix()
 					}
@@ -230,7 +229,7 @@ func matchRegexpIOSXEVersion(v string) string {
 
 	if err != nil {
 		logging.PeppaMonLog("info",
-			fmt.Sprintf("Failed to get IOS-XE Version information with string %v and error %v", v, err))
+			"Failed to get IOS-XE Version information with string %v and error %v", v, err)
 
 		return "N/A"
 	}

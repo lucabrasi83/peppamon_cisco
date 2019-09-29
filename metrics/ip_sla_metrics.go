@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -371,7 +370,7 @@ func parseIPSlaMetricsPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t t
 
 				if err != nil {
 					logging.PeppaMonLog("error",
-						fmt.Sprintf("Failed to convert IP SLA Start Time %v error %v", val, err))
+						"Failed to convert IP SLA Start Time %v error %v", val, err)
 				} else {
 					CreatePromMetric(
 						float64(timeObj.UTC().Unix()),

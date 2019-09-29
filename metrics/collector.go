@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -108,7 +107,7 @@ func CreatePromMetric(
 
 	if v, ok := val.(float64); !ok {
 		logging.PeppaMonLog("error",
-			fmt.Sprintf("Metric %v value %v not float64. Skipping it.", *desc, v))
+			"Metric %v value %v not float64. Skipping it.", *desc, v)
 		return
 	}
 

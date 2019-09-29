@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/logging"
@@ -67,7 +66,7 @@ func parseDeviceLicenseInfo(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, 
 		err := metadb.DBInstance.PersistsDeviceLicenseData(licObj, node)
 		if err != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to insert Device License data into DB: %v for Node %v", err, node))
+				"Failed to insert Device License data into DB: %v for Node %v", err, node)
 		}
 	}()
 

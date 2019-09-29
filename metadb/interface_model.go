@@ -17,7 +17,7 @@ func (p *peppamonMetaDB) PersistsInterfaceMetadata(ifMeta []map[string]interface
 	errSanitize := p.sanitizeInterfaces(ifMeta, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
-			fmt.Sprintf("Failed to sanitize interfaces_meta for node %v : %v", node, errSanitize))
+			"Failed to sanitize interfaces_meta for node %v : %v", node, errSanitize)
 	}
 
 	// Set Query timeout
@@ -75,7 +75,7 @@ func (p *peppamonMetaDB) PersistsInterfaceMetadata(ifMeta []map[string]interface
 		errCloseBatch := r.Close()
 		if errCloseBatch != nil {
 			logging.PeppaMonLog("error",
-				fmt.Sprintf("Failed to close SQL Batch Job with error %v", errCloseBatch))
+				"Failed to close SQL Batch Job query %s with error %v", sqlQuery, errCloseBatch)
 		}
 	}()
 

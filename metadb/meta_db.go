@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"net"
 	"os"
 	"sort"
@@ -68,7 +67,7 @@ func init() {
 	poolConfig, errParsePool := pgxpool.ParseConfig("")
 
 	if errParsePool != nil {
-		logging.PeppaMonLog("fatal", fmt.Sprintf("failed to parse DB pool config %v", errParsePool))
+		logging.PeppaMonLog("fatal", "failed to parse DB pool config %v", errParsePool)
 	}
 
 	// Set Connection Parameters
@@ -96,7 +95,7 @@ func init() {
 	if err != nil {
 		logging.PeppaMonLog(
 			"fatal",
-			fmt.Sprintf("Unable to Create Postgres Connection Pool: %v", err))
+			"Unable to Create Postgres Connection Pool: %v", err)
 	} else {
 		logging.PeppaMonLog("info", "Database Connection Pool successfully created")
 	}
@@ -106,7 +105,7 @@ func init() {
 
 	postgresVersion := DBInstance.displayPostgresVersion()
 
-	logging.PeppaMonLog("info", fmt.Sprintf("Postgres SQL Version: %v", postgresVersion))
+	logging.PeppaMonLog("info", "Postgres SQL Version: %v", postgresVersion)
 
 }
 
