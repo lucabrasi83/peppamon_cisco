@@ -187,7 +187,6 @@ func (p *peppamonMetaDB) sanitizeIPSLA(devIPSLA []map[string]interface{}, node s
 
 			// If we found a match, continue to next iteration
 			if deviceIPSLA["sla_number"] == dbIPSLA {
-
 				foundIPSLAIndex = append(foundIPSLAIndex, idx)
 			}
 		}

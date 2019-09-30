@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"strings"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/logging"
@@ -197,60 +196,5 @@ func parseIPSlaConfigPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t ti
 		}
 
 	}()
-
-}
-
-// convTOStoDSCP is a convenience function to convert the ToS value as a DSCP and returns the DSCP class
-func convTOStoDSCP(tos int) string {
-
-	// DSCP Decimal Value
-	dscpDecimal := tos >> 2
-
-	dscpMapDecToClass := map[int]string{
-		8:  "CS1",
-		10: "AF11",
-		12: "AF12",
-		14: "AF13",
-		16: "CS2",
-		18: "AF21",
-		20: "AF22",
-		22: "AF23",
-		24: "CS3",
-		26: "AF31",
-		28: "AF32",
-		30: "AF33",
-		32: "CS4",
-		34: "AF41",
-		36: "AF42",
-		38: "AF43",
-		40: "CS5",
-		46: "EF",
-		48: "CS6",
-		56: "CS7",
-	}
-
-	return dscpMapDecToClass[dscpDecimal]
-
-}
-
-// convIPSlaTagToDesc is a helper function to convert an IP SLA Tag into a meaningful description
-// It is decomposing the standard model tag in the configuration to describe the IP SLA
-// Class Of Service and Destination Hostname
-func convIPSlaTagToDesc(tag string) (string, string) {
-
-	if tag == "" {
-		return "N/A", "N/A"
-	}
-
-	tagSplit := strings.Split(tag, "_")
-
-	if len(tagSplit) == 3 && strings.Contains(tagSplit[0], "COS") {
-		cos := tagSplit[0]
-		dstHost := strings.Split(tagSplit[2], ":")[0]
-
-		return cos, dstHost
-	}
-
-	return "N/A", "N/A"
 
 }

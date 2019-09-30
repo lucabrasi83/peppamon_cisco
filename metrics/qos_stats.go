@@ -17,23 +17,9 @@ var (
 		nil,
 	)
 
-	ifStatsQoSClassMapClassifiedPackets = prometheus.NewDesc(
-		"cisco_iosxe_qos_class_map_classfied_packets",
-		"The number of total packets which filtered to the classifier-entry",
-		[]string{"node", "interface", "direction", "policy_map", "class_map", "parent_path"},
-		nil,
-	)
-
 	ifStatsQoSClassMapQueueOutputBytes = prometheus.NewDesc(
 		"cisco_iosxe_qos_class_map_queued_bytes",
 		"The number of bytes transmitted from queue",
-		[]string{"node", "interface", "direction", "policy_map", "class_map", "parent_path"},
-		nil,
-	)
-
-	ifStatsQoSClassMapQueueOutputPackets = prometheus.NewDesc(
-		"cisco_iosxe_qos_class_map_queued_packets",
-		"The number of packets transmitted from queue",
 		[]string{"node", "interface", "direction", "policy_map", "class_map", "parent_path"},
 		nil,
 	)
@@ -45,23 +31,9 @@ var (
 		nil,
 	)
 
-	ifStatsQoSClassMapQueueSizePackets = prometheus.NewDesc(
-		"cisco_iosxe_qos_class_map_queue_size_packets",
-		"The number of packets currently buffered",
-		[]string{"node", "interface", "direction", "policy_map", "class_map", "parent_path"},
-		nil,
-	)
-
 	ifStatsQoSClassMapQueueDropBytes = prometheus.NewDesc(
 		"cisco_iosxe_qos_class_map_queue_drops_bytes",
 		"The total number of bytes dropped",
-		[]string{"node", "interface", "direction", "policy_map", "class_map", "parent_path"},
-		nil,
-	)
-
-	ifStatsQoSClassMapQueueDropPackets = prometheus.NewDesc(
-		"cisco_iosxe_qos_class_map_queue_drops_packets",
-		"The total number of packets dropped",
 		[]string{"node", "interface", "direction", "policy_map", "class_map", "parent_path"},
 		nil,
 	)

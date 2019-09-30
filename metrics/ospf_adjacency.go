@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
@@ -102,34 +101,4 @@ func parseOSPFAdjMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.
 
 	}
 
-}
-
-// intToIP4 is a helper function that converts base 10 IP address into a string
-func intToIP4(ipInt int64) string {
-
-	// need to do two bit shifting and “0xff” masking
-	b0 := strconv.FormatInt((ipInt>>24)&0xff, 10)
-	b1 := strconv.FormatInt((ipInt>>16)&0xff, 10)
-	b2 := strconv.FormatInt((ipInt>>8)&0xff, 10)
-	b3 := strconv.FormatInt(ipInt&0xff, 10)
-
-	ipOctets := []string{b0, b1, b2, b3}
-
-	return strings.Join(ipOctets, ".")
-}
-
-func ospfNbrStatusToNum(status string) float64 {
-
-	nbrStatusMap := map[string]float64{
-		"ospf-nbr-down":           1,
-		"ospf-nbr-attempt":        2,
-		"ospf-nbr-init":           3,
-		"ospf-nbr-two-way":        4,
-		"ospf-nbr-exchange-start": 5,
-		"ospf-nbr-exchange":       6,
-		"ospf-nbr-loading":        7,
-		"ospf-nbr-full":           8,
-	}
-
-	return nbrStatusMap[status]
 }

@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"regexp"
 	"sync"
 	"time"
 
@@ -220,25 +219,4 @@ func recursiveHWInfo(m *telemetry.TelemetryField, t time.Time, node string,
 		// Recursive Function in the YANG model until we get the fields we're looking for
 		recursiveHWInfo(field, t, node, chHardware, chSysData)
 	}
-}
-
-// matchRegexpIOSXEVersion is a convenience function that converts the Cisco 'show version'
-// into the actual IOS-XE version
-func matchRegexpIOSXEVersion(v string) string {
-	r, err := regexp.Compile(`Version (.*?),`)
-
-	if err != nil {
-		logging.PeppaMonLog("info",
-			"Failed to get IOS-XE Version information with string %v and error %v", v, err)
-
-		return "N/A"
-	}
-
-	m := r.FindSubmatch([]byte(v))
-
-	// We expect a byte slice of 2 elements if the Regex matches and return the last element as the matching subgroup
-	if len(m) == 2 {
-		return string(m[1])
-	}
-	return v
 }

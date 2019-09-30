@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
+	grpcRecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/lucabrasi83/peppamon_cisco/logging"
 	"github.com/lucabrasi83/peppamon_cisco/metadb"
 	"github.com/lucabrasi83/peppamon_cisco/metrics"
@@ -32,11 +33,13 @@ type HighObsSrv struct {
 	exp *metrics.Collector
 }
 
-var collector *metrics.Collector
-
-func init() {
+var (
 	// Register Peppamon Prometheus Collector
 	collector = metrics.NewCollector()
+)
+
+func init() {
+
 	prometheus.MustRegister(collector)
 }
 
@@ -59,9 +62,13 @@ func main() {
 		Time:              10 * time.Second,
 		Timeout:           30 * time.Second,
 	}
-	grpcServerOptions := grpc.KeepaliveParams(grpcServerKeepalives)
+	grpcServerKeepaliveOptions := grpc.KeepaliveParams(grpcServerKeepalives)
 
-	s := grpc.NewServer(grpcServerOptions)
+	// Create gRPC Server with options and middleware
+	s := grpc.NewServer(
+		grpcServerKeepaliveOptions,
+		grpc.StreamInterceptor(grpcRecovery.StreamServerInterceptor()),
+	)
 
 	mdt_dialout.RegisterGRPCMdtDialoutServer(s, &HighObsSrv{})
 
@@ -151,6 +158,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 	clientIPNet, ok := peer.FromContext(stream.Context())
 
 	if ok {
+
 		clientIPSocket = clientIPNet.Addr.String()
 	}
 
@@ -166,7 +174,8 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		req, err := stream.Recv()
 
 		if err == io.EOF {
-			return nil
+			return status.Errorf(
+				codes.OK, "OK")
 		}
 
 		// Handle client disconnection error
@@ -183,7 +192,10 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 			}
 			s.exp.Mutex.Unlock()
 
-			return err
+			return status.Errorf(
+				codes.Aborted,
+				"reading stream failed. Disconnecting now.",
+			)
 		}
 
 		// Get gRPC stream data
@@ -200,7 +212,10 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 				"error",
 				"Error while unmarshaling Proto message from client %v : %v", err, clientIPSocket)
 
-			return err
+			return status.Errorf(
+				codes.Internal,
+				"unable to unmarshal protocol buffer message",
+			)
 		}
 
 		// The Metrics Source represents the metrics cache key and is a combination of the Telemetry NodeID
@@ -250,6 +265,7 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 			if msg.EncodingPath == m.EncodingPath {
 
 				yangPathSupported = true
+
 				go m.RecordMetricFunc(msg, deviceMetrics, promTimestamp.UTC(), node)
 			}
 		}
@@ -272,4 +288,5 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		}
 
 	}
+
 }

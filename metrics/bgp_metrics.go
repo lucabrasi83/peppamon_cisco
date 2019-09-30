@@ -240,20 +240,3 @@ func parseBgpIpv4UnicastPB(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t
 	}()
 
 }
-
-// mapBgpNeighborFSMToInteger is a helper function to map the neighbor FSM status to an integer for Grafana dashboards
-func mapBgpNeighborFSMToInteger(status string) string {
-
-	// Neighbor FSM Status mapped to Integer for Grafana cell coloring
-	// Workaround until Grafana allows mapping of colors to string values
-	peerStatusMap := map[string]string{
-		"fsm-idle":        "0",
-		"fsm-connect":     "1",
-		"fsm-active":      "2",
-		"fsm-opensent":    "3",
-		"fsm-openconfirm": "4",
-		"fsm-established": "5",
-	}
-
-	return peerStatusMap[status]
-}
