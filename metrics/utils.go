@@ -83,6 +83,7 @@ func convTOStoDSCP(tos int) string {
 	dscpDecimal := tos >> 2
 
 	dscpMapDecToClass := map[int]string{
+		0:  "BE",
 		8:  "CS1",
 		10: "AF11",
 		12: "AF12",
@@ -128,5 +129,44 @@ func convIPSlaTagToDesc(tag string) (string, string) {
 	}
 
 	return "N/A", "N/A"
+
+}
+
+// convIPProtocolToName is a convenience function to convert the IP Protocol code to the protocol name
+func convIPProtocolToName(proto float64) string {
+
+	protoMap := map[float64]string{
+		1:   "ICMP",
+		2:   "IGMP",
+		3:   "GGP",
+		4:   "IP-in-IP",
+		5:   "ST",
+		6:   "TCP",
+		7:   "CBT",
+		8:   "EGP",
+		9:   "IGP",
+		17:  "UDP",
+		41:  "IPv6",
+		47:  "GRE",
+		50:  "ESP",
+		51:  "AH",
+		56:  "TLSP",
+		57:  "SKIP",
+		58:  "IPv6-ICMP",
+		88:  "EIGRP",
+		89:  "OSPF",
+		92:  "MTP",
+		111: "IPX-in-IP",
+		112: "VRRP",
+		115: "L2TP",
+		124: "IS-IS",
+		136: "UDPLite",
+	}
+
+	if _, ok := protoMap[proto]; !ok {
+		return "N/A"
+	}
+
+	return protoMap[proto]
 
 }

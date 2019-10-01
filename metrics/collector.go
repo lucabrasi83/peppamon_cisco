@@ -113,7 +113,6 @@ func CreatePromMetric(
 
 	metricMutex := &sync.Mutex{}
 	m := DeviceUnaryMetric{Mutex: metricMutex}
-
 	m.Metric = prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(
 		desc,
 		mt,
