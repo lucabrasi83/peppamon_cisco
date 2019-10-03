@@ -334,9 +334,9 @@ func (p *peppamonMetaDB) sanitizeBgpPeers(bgpPeers []map[string]interface{}, nod
 		for idx, dbPeer := range allDBBgpPeers {
 
 			// If we found a match, continue to next iteration
-			if devicePeer["neighbor_id"] == dbPeer.NeighborID &&
-				devicePeer["address_family_type"] == dbPeer.AFIType &&
-				devicePeer["address_family_vrf"] == dbPeer.Vrf {
+			if devicePeer["neighbor_id"].(string) == dbPeer.NeighborID &&
+				devicePeer["address_family_type"].(string) == dbPeer.AFIType &&
+				devicePeer["address_family_vrf"].(string) == dbPeer.Vrf {
 
 				foundpeersIndex = append(foundpeersIndex, idx)
 			}
@@ -373,10 +373,11 @@ func (p *peppamonMetaDB) sanitizeBgpAFIs(bgpPeers []map[string]interface{}, node
 		for idx, dbAfi := range allDBBgpAfis {
 
 			// If we found a match, continue to next iteration
-			if deviceAfi["afi_type"] == dbAfi.AddressFamilyType &&
-				deviceAfi["vrf_name"] == dbAfi.Vrf {
+			if v, ok := deviceAfi["afi_type"].(string); ok && v == dbAfi.AddressFamilyType {
+				if v, ok := deviceAfi["vrf_name"].(string); ok && v == dbAfi.Vrf {
+					foundAfisIndex = append(foundAfisIndex, idx)
+				}
 
-				foundAfisIndex = append(foundAfisIndex, idx)
 			}
 		}
 	}

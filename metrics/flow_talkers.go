@@ -29,6 +29,25 @@ var (
 		},
 		nil,
 	)
+
+	flowTalkerStatsPackets = prometheus.NewDesc(
+		"cisco_iosxe_flexible_netflow_record_packets",
+		"The number of packets passed through the netflow record",
+		[]string{
+			"node",
+			"source_address",
+			"destination_address",
+			"interface_input",
+			"is_multicast",
+			"vrf_id_input",
+			"source_port",
+			"destination_port",
+			"dscp",
+			"ip_protocol",
+			"interface_output",
+		},
+		nil,
+	)
 )
 
 const (
@@ -71,6 +90,9 @@ const (
 
 	// Flow record processed bytes
 	yangFlowRecordProcessBytes = "bytes"
+
+	// Flow record processed Packets
+	yangFlowRecordProcessPackets = "packets"
 )
 
 func init() {
@@ -108,6 +130,7 @@ func parseFlowMonitors(m *telemetry.TelemetryField, dm *DeviceGroupedMetrics, t 
 				yangFlowRecordIPProtocol:         "N/A",
 				yangFlowRecordInterfaceOutput:    "N/A",
 				yangFlowRecordProcessBytes:       0,
+				yangFlowRecordProcessPackets:     0,
 			}
 
 			for _, flowField := range field.Fields {
@@ -123,9 +146,29 @@ func parseFlowMonitors(m *telemetry.TelemetryField, dm *DeviceGroupedMetrics, t 
 			tosStripX := strings.Replace(flowObj[yangFlowRecordIPTOS].(string), "0x", "", -1)
 			tosToInt, _ := strconv.ParseInt(tosStripX, 16, 64)
 
+			// Create Metric for Bytes processed
 			CreatePromMetric(
 				flowObj[yangFlowRecordProcessBytes].(float64),
 				flowTalkerStatsBytes,
+				prometheus.CounterValue,
+				dm, t,
+				node,
+				flowObj[yangFlowRecordSourceAddress].(string),
+				flowObj[yangFlowRecordDestinationAddress].(string),
+				flowObj[yangFlowRecordInterfaceInput].(string),
+				flowObj[yangFlowRecordIsMulticast].(string),
+				fmt.Sprintf("%.0f", flowObj[yangFlowRecordVRFIDInput].(float64)),
+				fmt.Sprintf("%.0f", flowObj[yangFlowRecordSourcePort].(float64)),
+				fmt.Sprintf("%.0f", flowObj[yangFlowRecordDestinationPort].(float64)),
+				convTOStoDSCP(int(tosToInt)),
+				convIPProtocolToName(flowObj[yangFlowRecordIPProtocol].(float64)),
+				flowObj[yangFlowRecordInterfaceOutput].(string),
+			)
+
+			// Create Metric for Packets processed
+			CreatePromMetric(
+				flowObj[yangFlowRecordProcessPackets].(float64),
+				flowTalkerStatsPackets,
 				prometheus.CounterValue,
 				dm, t,
 				node,

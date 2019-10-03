@@ -178,7 +178,7 @@ func (p *peppamonMetaDB) sanitizeInterfaces(devInterfaces []map[string]interface
 		for idx, dbInterface := range allDBInterfaces {
 
 			// If we found a match, continue to next iteration
-			if deviceInterface["if_name"] == dbInterface {
+			if v, ok := deviceInterface["if_name"].(string); ok && v == dbInterface {
 
 				foundInterfacesIndex = append(foundInterfacesIndex, idx)
 			}

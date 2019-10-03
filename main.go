@@ -31,6 +31,7 @@ import (
 
 type HighObsSrv struct {
 	exp *metrics.Collector
+	mu  *sync.Mutex
 }
 
 var (
@@ -149,7 +150,9 @@ func main() {
 func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServer) error {
 
 	// Assign Collector Instance
+	collector.Mutex.Lock()
 	s.exp = collector
+	collector.Mutex.Unlock()
 
 	var clientIPSocket string
 	var telemetrySource metrics.Source

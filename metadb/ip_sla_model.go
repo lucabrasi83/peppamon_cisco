@@ -113,7 +113,8 @@ func (p *peppamonMetaDB) fetchAllIPSLA(node string) ([]int, error) {
 
 	const sqlQuery = `SELECT entry_id
 				      FROM ip_sla_config_meta
-                      WHERE device_id = $1`
+                      WHERE device_id = $1
+				      ORDER BY entry_id`
 
 	defer cancelQuery()
 
@@ -181,6 +182,8 @@ func (p *peppamonMetaDB) sanitizeIPSLA(devIPSLA []map[string]interface{}, node s
 
 	var foundIPSLAIndex []int
 
+	logging.PeppaMonLog("warning", "All IP SLA %v for %v", allDBIPSLA, node)
+
 	// Loop through DB IP SLAs and add their indexes for those found
 	for _, deviceIPSLA := range devIPSLA {
 		for idx, dbIPSLA := range allDBIPSLA {
@@ -192,10 +195,13 @@ func (p *peppamonMetaDB) sanitizeIPSLA(devIPSLA []map[string]interface{}, node s
 		}
 	}
 
+	logging.PeppaMonLog("warning", "IP SLA Found index %v", foundIPSLAIndex)
+
 	// Delete IP SLA from DB not part of the device anymore
 	for idx, dbIPSLA := range allDBIPSLA {
-
+		logging.PeppaMonLog("warning", "DB IP SLA  index %v", idx)
 		if !binarySearchSanitizeDB(foundIPSLAIndex, idx) {
+			logging.PeppaMonLog("warning", "deleting IP SLA %v for %v within %v", dbIPSLA, node, allDBIPSLA)
 			err := p.deleteIPSLA(node, dbIPSLA)
 
 			if err != nil {
