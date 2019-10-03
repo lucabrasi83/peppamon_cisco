@@ -19,7 +19,7 @@ func (p *peppamonMetaDB) PersistsDeviceHWInventory(devHWInventory []map[string]i
 
 	// Sanitize Data First
 	// Ensure Telemetry data from device and DB are in sync
-	errSanitize := p.sanitizeIPSLA(devHWInventory, node)
+	errSanitize := p.sanitizeDeviceHWInventory(devHWInventory, node)
 	if errSanitize != nil {
 		logging.PeppaMonLog("error",
 			"Failed to sanitize device_hw_info for node %v : %v", node, errSanitize)
@@ -178,11 +178,14 @@ func (p *peppamonMetaDB) sanitizeDeviceHWInventory(devHWInfo []map[string]interf
 		for idx, dbHWInfo := range allDBdevHWInfo {
 
 			// If we found a match, continue to next iteration
-			if deviceHWInfo["hw-type"] == dbHWInfo.HWType &&
-				deviceHWInfo["part-number"] == dbHWInfo.PartNumber &&
-				deviceHWInfo["serial-number"] == dbHWInfo.SerialNumber {
+			if v, ok := deviceHWInfo["hw-type"].(string); ok && v == dbHWInfo.HWType {
+				if v, ok := deviceHWInfo["part-number"].(string); ok && v == dbHWInfo.PartNumber {
+					if v, ok := deviceHWInfo["serial-number"].(string); ok && v == dbHWInfo.SerialNumber {
+						foundHWInfoIndex = append(foundHWInfoIndex, idx)
+					}
 
-				foundHWInfoIndex = append(foundHWInfoIndex, idx)
+				}
+
 			}
 		}
 	}

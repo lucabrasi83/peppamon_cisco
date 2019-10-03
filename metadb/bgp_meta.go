@@ -334,12 +334,14 @@ func (p *peppamonMetaDB) sanitizeBgpPeers(bgpPeers []map[string]interface{}, nod
 		for idx, dbPeer := range allDBBgpPeers {
 
 			// If we found a match, continue to next iteration
-			if devicePeer["neighbor_id"].(string) == dbPeer.NeighborID &&
-				devicePeer["address_family_type"].(string) == dbPeer.AFIType &&
-				devicePeer["address_family_vrf"].(string) == dbPeer.Vrf {
-
-				foundpeersIndex = append(foundpeersIndex, idx)
+			if v, ok := devicePeer["neighbor_id"].(string); ok && v == dbPeer.NeighborID {
+				if v, ok := devicePeer["address_family_type"].(string); ok && v == dbPeer.AFIType {
+					if v, ok := devicePeer["address_family_vrf"].(string); ok && v == dbPeer.Vrf {
+						foundpeersIndex = append(foundpeersIndex, idx)
+					}
+				}
 			}
+
 		}
 	}
 
