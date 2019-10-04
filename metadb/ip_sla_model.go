@@ -192,8 +192,6 @@ func (p *peppamonMetaDB) sanitizeIPSLA(devIPSLA []map[string]interface{}, node s
 		}
 	}
 
-	logging.PeppaMonLog("warning", "IP SLA Found index %v", foundIPSLAIndex)
-
 	// Delete IP SLA from DB not part of the device anymore
 	for idx, dbIPSLA := range allDBIPSLA {
 		if !binarySearchSanitizeDB(foundIPSLAIndex, idx) {

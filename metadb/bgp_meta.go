@@ -360,7 +360,7 @@ func (p *peppamonMetaDB) sanitizeBgpPeers(bgpPeers []map[string]interface{}, nod
 	return nil
 }
 
-func (p *peppamonMetaDB) sanitizeBgpAFIs(bgpPeers []map[string]interface{}, node string) error {
+func (p *peppamonMetaDB) sanitizeBgpAFIs(bgpAfis []map[string]interface{}, node string) error {
 
 	allDBBgpAfis, err := p.fetchAllBgpAFI(node)
 
@@ -371,12 +371,12 @@ func (p *peppamonMetaDB) sanitizeBgpAFIs(bgpPeers []map[string]interface{}, node
 	var foundAfisIndex []int
 
 	// Loop through DB BGP AFI's and add their indexes for those found
-	for _, deviceAfi := range bgpPeers {
+	for _, deviceAfi := range bgpAfis {
 		for idx, dbAfi := range allDBBgpAfis {
 
 			// If we found a match, continue to next iteration
-			if v, ok := deviceAfi["afi_type"].(string); ok && v == dbAfi.AddressFamilyType {
-				if v, ok := deviceAfi["vrf_name"].(string); ok && v == dbAfi.Vrf {
+			if v, ok := deviceAfi["bgp_address_family_type"].(string); ok && v == dbAfi.AddressFamilyType {
+				if v, ok := deviceAfi["bgp_address_family_vrf"].(string); ok && v == dbAfi.Vrf {
 					foundAfisIndex = append(foundAfisIndex, idx)
 				}
 
