@@ -18,9 +18,15 @@ require (
 	github.com/shopspring/decimal v0.0.0-20190905144223-a36b5d85f337 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
+<<<<<<< HEAD
 	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc // indirect
 	golang.org/x/net v0.0.0-20191007182048-72f939374954
 	golang.org/x/sys v0.0.0-20191007154456-ef33b2fb2c41 // indirect
 	google.golang.org/genproto v0.0.0-20191007204434-a023cd5227bd // indirect
+=======
+	golang.org/x/net v0.0.0-20190916140828-c8589233b77d
+	golang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3 // indirect
+	google.golang.org/genproto v0.0.0-20190916214212-f660b8655731 // indirect
+>>>>>>> f72e7e081f48fe507aa41572228fb4fb60e111df
 	google.golang.org/grpc v1.24.0
 )
