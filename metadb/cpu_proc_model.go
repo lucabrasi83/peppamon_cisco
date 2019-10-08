@@ -8,7 +8,7 @@ import (
 	"github.com/lucabrasi83/peppamon_cisco/logging"
 )
 
-// PersistsInterfaceMetadata will update the Telemetry Metadata database with interfaces attributes
+// PersistsCPUProcMetadata will update the Telemetry Metadata database with interfaces attributes
 func (p *peppamonMetaDB) PersistsCPUProcMetadata(cpuProc []map[string]interface{}) error {
 
 	// Set Query timeout
