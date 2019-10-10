@@ -71,7 +71,7 @@ func main() {
 		grpc.StreamInterceptor(grpcRecovery.StreamServerInterceptor()),
 	)
 
-	mdt_dialout.RegisterGRPCMdtDialoutServer(s, &HighObsSrv{})
+	mdt_dialout.RegisterGRPCMdtDialoutServer(s, &HighObsSrv{exp: collector})
 
 	logging.PeppaMonLog(
 		"info",
@@ -148,11 +148,6 @@ func main() {
 }
 
 func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServer) error {
-
-	// Assign Collector Instance
-	collector.Mutex.Lock()
-	s.exp = collector
-	collector.Mutex.Unlock()
 
 	var clientIPSocket string
 	var telemetrySource metrics.Source
