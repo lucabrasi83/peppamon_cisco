@@ -8,7 +8,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/gogo/protobuf v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
-	github.com/jackc/pgx/v4 v4.0.1
+	github.com/jackc/pgx/v4 v4.1.0
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
@@ -18,8 +18,9 @@ require (
 	github.com/shopspring/decimal v0.0.0-20190905144223-a36b5d85f337 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc // indirect
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
+	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/genproto v0.0.0-20190916214212-f660b8655731 // indirect
 	google.golang.org/grpc v1.24.0
 )
