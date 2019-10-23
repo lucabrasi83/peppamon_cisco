@@ -8,7 +8,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/gogo/protobuf v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
-	github.com/jackc/pgx/v4 v4.1.0
+	github.com/jackc/pgx/v4 v4.1.2
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
