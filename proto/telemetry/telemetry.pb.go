@@ -91,7 +91,7 @@ func (m *Telemetry) Reset()         { *m = Telemetry{} }
 func (m *Telemetry) String() string { return proto.CompactTextString(m) }
 func (*Telemetry) ProtoMessage()    {}
 func (*Telemetry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_telemetry_dc8025a43bf790a2, []int{0}
+	return fileDescriptor_telemetry_44f5a0e5f4bec473, []int{0}
 }
 func (m *Telemetry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -344,7 +344,7 @@ func (m *TelemetryField) Reset()         { *m = TelemetryField{} }
 func (m *TelemetryField) String() string { return proto.CompactTextString(m) }
 func (*TelemetryField) ProtoMessage()    {}
 func (*TelemetryField) Descriptor() ([]byte, []int) {
-	return fileDescriptor_telemetry_dc8025a43bf790a2, []int{1}
+	return fileDescriptor_telemetry_44f5a0e5f4bec473, []int{1}
 }
 func (m *TelemetryField) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -688,7 +688,7 @@ func (m *TelemetryGPBTable) Reset()         { *m = TelemetryGPBTable{} }
 func (m *TelemetryGPBTable) String() string { return proto.CompactTextString(m) }
 func (*TelemetryGPBTable) ProtoMessage()    {}
 func (*TelemetryGPBTable) Descriptor() ([]byte, []int) {
-	return fileDescriptor_telemetry_dc8025a43bf790a2, []int{2}
+	return fileDescriptor_telemetry_44f5a0e5f4bec473, []int{2}
 }
 func (m *TelemetryGPBTable) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -768,7 +768,7 @@ func (m *TelemetryRowGPB) Reset()         { *m = TelemetryRowGPB{} }
 func (m *TelemetryRowGPB) String() string { return proto.CompactTextString(m) }
 func (*TelemetryRowGPB) ProtoMessage()    {}
 func (*TelemetryRowGPB) Descriptor() ([]byte, []int) {
-	return fileDescriptor_telemetry_dc8025a43bf790a2, []int{3}
+	return fileDescriptor_telemetry_44f5a0e5f4bec473, []int{3}
 }
 func (m *TelemetryRowGPB) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2243,10 +2243,10 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("proto/telemetry/telemetry.proto", fileDescriptor_telemetry_dc8025a43bf790a2)
+	proto.RegisterFile("proto/telemetry/telemetry.proto", fileDescriptor_telemetry_44f5a0e5f4bec473)
 }
 
-var fileDescriptor_telemetry_dc8025a43bf790a2 = []byte{
+var fileDescriptor_telemetry_44f5a0e5f4bec473 = []byte{
 	// 585 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x94, 0x41, 0x6f, 0x9b, 0x30,
 	0x14, 0xc7, 0xe3, 0xa6, 0x6b, 0xca, 0x83, 0x34, 0x8a, 0xab, 0x49, 0xde, 0x54, 0x51, 0x9a, 0x5e,
