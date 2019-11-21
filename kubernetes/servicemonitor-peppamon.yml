@@ -9,8 +9,17 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-  - port: prom
-    path: /metrics
+    - interval: 3s
+      path: /metrics
+      port: prom
+      relabelings:
+        - action: labeldrop
+          regex: ^pod$
+        - regex: .*
+          replacement: peppamon-collector-cisco
+          sourceLabels:
+          - __address__
+          targetLabel: instance
   namespaceSelector:
     matchNames:
     - monitoring
