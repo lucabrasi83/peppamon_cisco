@@ -104,6 +104,9 @@ func init() {
 
 func parseFlowMonitorTalkersMsg(msg *telemetry.Telemetry, dm *DeviceGroupedMetrics, t time.Time, node string) {
 
+	if len(msg.DataGpbkv) == 0 {
+		return
+	}
 	for _, p := range msg.DataGpbkv[0].Fields {
 
 		// Launch recursive function to parse Telemetry PB message and capture desired info
