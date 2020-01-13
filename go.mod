@@ -9,7 +9,7 @@ require (
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/gogo/protobuf v1.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
-	github.com/jackc/pgx/v4 v4.1.2
+	github.com/jackc/pgx/v4 v4.2.1
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
