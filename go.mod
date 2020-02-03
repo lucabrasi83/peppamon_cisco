@@ -6,7 +6,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/fatih/color v1.7.0
 	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/go-redis/redis/v7 v7.0.0-beta.4
+	github.com/go-redis/redis/v7 v7.0.0-beta.6
 	github.com/gogo/protobuf v1.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
 	github.com/jackc/pgx/v4 v4.1.2
