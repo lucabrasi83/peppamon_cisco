@@ -1,4 +1,4 @@
-FROM golang:1.13.4-alpine as builder
+FROM golang:1.13.7-alpine as builder
 COPY ./certs/rds-ca-2019-root.pem /usr/local/share/ca-certificates
 RUN apk add --no-cache build-base git ca-certificates && update-ca-certificates 2>/dev/null || true
 COPY . /go/src/github.com/lucabrasi83/peppamon_cisco
