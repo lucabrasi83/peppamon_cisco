@@ -80,8 +80,9 @@ func init() {
 
 	poolConfig.ConnConfig.TLSConfig =
 		&tls.Config{
-			ServerName: os.Getenv("PEPPAMON_METADB_HOST"),
-			RootCAs:    certPool,
+			ServerName:         os.Getenv("PEPPAMON_METADB_HOST"),
+			RootCAs:            certPool,
+			InsecureSkipVerify: true,
 		}
 
 	poolConfig.ConnConfig.DialFunc =
