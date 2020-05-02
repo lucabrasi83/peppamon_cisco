@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,11 +15,10 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	grpcRecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	"github.com/lucabrasi83/peppamon_cisco/kvstore"
 	"github.com/lucabrasi83/peppamon_cisco/logging"
 	"github.com/lucabrasi83/peppamon_cisco/metadb"
 	"github.com/lucabrasi83/peppamon_cisco/metrics"
-	"github.com/lucabrasi83/peppamon_cisco/proto/mdt_grpc_dialout"
+	mdt_dialout "github.com/lucabrasi83/peppamon_cisco/proto/mdt_grpc_dialout"
 	"github.com/lucabrasi83/peppamon_cisco/proto/telemetry"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -106,7 +104,7 @@ func main() {
 
 		http.Handle("/metrics", promhttp.Handler())
 
-		http.HandleFunc("/telemetry-device", addTelemetryDeviceHandler)
+		//http.HandleFunc("/telemetry-device", addTelemetryDeviceHandler)
 
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			_, errWelcomePage := w.Write([]byte(`<html>
@@ -264,39 +262,39 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 		node := msg.GetNodeIdStr()
 
 		// Map Node IP Address to Hostname from KV Store
-		ipAddr, err := net.ResolveIPAddr("ip", node)
+		//ipAddr, err := net.ResolveIPAddr("ip", node)
+		//
+		//if err != nil {
+		//	logging.PeppaMonLog("error", "unable to decode value %v as a valid IP Address with error %v", node, err)
+		//	return status.Errorf(
+		//		codes.InvalidArgument,
+		//		fmt.Sprintf("Unable to decode value %v as a valid IP Address", node))
+		//}
 
-		if err != nil {
-			logging.PeppaMonLog("error", "unable to decode value %v as a valid IP Address with error %v", node, err)
-			return status.Errorf(
-				codes.InvalidArgument,
-				fmt.Sprintf("Unable to decode value %v as a valid IP Address", node))
-		}
-
-		telemetryDevice, err := kvstore.LookupTelemetryHost(*ipAddr)
-
-		if err != nil {
-			logging.PeppaMonLog("error", "unable to lookup key %v in KV Config Store with error %v",
-				ipAddr.IP.String(), err)
-
-			return status.Errorf(
-				codes.InvalidArgument,
-				fmt.Sprintf("Unable to verify device %v in KV Store", node))
-		}
-
-		if _, ok := telemetryDevice["hostname"]; !ok {
-			logging.PeppaMonLog("error", "unable to verify device %v in KV Config store", node)
-			return status.Errorf(
-				codes.InvalidArgument,
-				fmt.Sprintf("Unable to verify device %v in KV Store", node))
-		}
+		//telemetryDevice, err := kvstore.LookupTelemetryHost(*ipAddr)
+		//
+		//if err != nil {
+		//	logging.PeppaMonLog("error", "unable to lookup key %v in KV Config Store with error %v",
+		//		ipAddr.IP.String(), err)
+		//
+		//	return status.Errorf(
+		//		codes.InvalidArgument,
+		//		fmt.Sprintf("Unable to verify device %v in KV Store", node))
+		//}
+		//
+		//if _, ok := telemetryDevice["hostname"]; !ok {
+		//	logging.PeppaMonLog("error", "unable to verify device %v in KV Config store", node)
+		//	return status.Errorf(
+		//		codes.InvalidArgument,
+		//		fmt.Sprintf("Unable to verify device %v in KV Store", node))
+		//}
 
 		for _, m := range metrics.CiscoMetricRegistrar {
 			if msg.EncodingPath == m.EncodingPath {
 
 				yangPathSupported = true
 
-				go m.RecordMetricFunc(msg, deviceMetrics, promTimestamp.UTC(), telemetryDevice["hostname"])
+				go m.RecordMetricFunc(msg, deviceMetrics, promTimestamp.UTC(), node)
 			}
 		}
 
@@ -321,48 +319,48 @@ func (s *HighObsSrv) MdtDialout(stream mdt_dialout.GRPCMdtDialout_MdtDialoutServ
 
 }
 
-type telemetryDeviceKVStore struct {
-	IPAddress string `json:"ipAddress"`
-	Hostname  string `json:"hostname"`
-}
+//type telemetryDeviceKVStore struct {
+//	IPAddress string `json:"ipAddress"`
+//	Hostname  string `json:"hostname"`
+//}
 
-func addTelemetryDeviceHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	data := telemetryDeviceKVStore{}
-	err := json.NewDecoder(r.Body).Decode(&data)
-
-	if err != nil {
-		logging.PeppaMonLog("error", "unable to decode JSON payload while creating new telemetry device: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	ipAddr, err := net.ResolveIPAddr("ip", data.IPAddress)
-
-	if err != nil {
-		logging.PeppaMonLog("error", "unable to validate IP Address %v with error %v", data.IPAddress, err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if data.Hostname == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	err = kvstore.InsertNewTelemetryHost(*ipAddr, map[string]interface{}{
-		"hostname": data.Hostname,
-	})
-	if err != nil {
-		logging.PeppaMonLog("error", "unable to create host in KV Config Store with error %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-}
+//func addTelemetryDeviceHandler(w http.ResponseWriter, r *http.Request) {
+//
+//	if r.Method != "POST" {
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//
+//	data := telemetryDeviceKVStore{}
+//	err := json.NewDecoder(r.Body).Decode(&data)
+//
+//	if err != nil {
+//		logging.PeppaMonLog("error", "unable to decode JSON payload while creating new telemetry device: %v", err)
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//
+//	ipAddr, err := net.ResolveIPAddr("ip", data.IPAddress)
+//
+//	if err != nil {
+//		logging.PeppaMonLog("error", "unable to validate IP Address %v with error %v", data.IPAddress, err)
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//
+//	if data.Hostname == "" {
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//
+//	err = kvstore.InsertNewTelemetryHost(*ipAddr, map[string]interface{}{
+//		"hostname": data.Hostname,
+//	})
+//	if err != nil {
+//		logging.PeppaMonLog("error", "unable to create host in KV Config Store with error %v", err)
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//	w.Header().Set("Content-Type", "application/json")
+//	w.WriteHeader(http.StatusCreated)
+//}
