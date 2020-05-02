@@ -23,5 +23,5 @@ require (
 	golang.org/x/net v0.0.0-20191109021931-daa7c04131f5
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a // indirect
-	google.golang.org/grpc v1.25.1
+	google.golang.org/grpc v1.29.1
 )
