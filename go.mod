@@ -9,7 +9,7 @@ require (
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
-	github.com/jackc/pgx/v4 v4.7.1
+	github.com/jackc/pgx/v4 v4.8.0
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/prometheus/client_golang v1.7.1
 	github.com/shirou/gopsutil v2.19.9+incompatible
