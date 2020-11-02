@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
-	github.com/fatih/color v1.7.0
+	github.com/fatih/color v1.10.0
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.1
